@@ -1,0 +1,23 @@
+pong
+pong	pong
+//hkdsgjdsaagsdiayvjdsat67m3fjaistdj9al
+jmp+2
+pong pong
+pong
+
+
+int a=123
+int b=21
+print(a+b)
+if a==123{
+	while b>10 {b--;pong}
+	if b>100 print(">100")
+	else print("<=100")
+}
+struct A{
+	+()print("+A")
+	-(){print("-A")}
+}
+A
+pong
+1

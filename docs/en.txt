@@ -1,0 +1,6 @@
+"//" eats the rest of the line as a comment to ignore
+"file" eats(and uses as file name) a string(or the rest of the line if failed) and then hallucinates that the contents of a file(obtained from the name) are all this line instead of this instruction
+
+"pong" the first instruction of DerKern. "ping"->"pong" style of Discord bots and their commands was the inspiration. Also prints its own line.
+"ret"="return"
+"jmp +_I" jumps to the begining of the line number <currentLineNumber+"_I">. _I must be replaced with an integer, "+" can be replaced with "-" to go up instead.
