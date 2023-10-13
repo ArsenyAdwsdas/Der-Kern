@@ -14,7 +14,7 @@ namespace DerKern{
 						*(uint16_t*)_=s;
 						*(uint16_t*)(_+2+s)=siz-s;
 					}else*(uint16_t*)_=siz;
-					return _+2;
+					return raw+_+2;
 				}
 			}
 			if(anew!=(uint32_t)-1){

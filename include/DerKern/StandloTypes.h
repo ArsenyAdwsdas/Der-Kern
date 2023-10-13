@@ -39,15 +39,16 @@ namespace DerKern{
 		inline pair():a(),b(){}
 		inline pair(A _a=A(),B _b=B()):a(_a),b(_b){}
 		inline pair(const pair&p):a(p._a),b(p._b){}
-		inline operator=(const pair&p){a=p.a;b=p.b;}
+		inline pair&operator=(const pair&p){a=p.a;b=p.b;return*this;}
 		inline ~pair(){a.~A();b.~B();}
-		template<int(*_cmp)(const A&,const A&)=cmp>static inline int cmpA(const pair&a,const pair&b){return _cmp(a.a,b.a);}
-		template<int(*_cmp)(const B&,const B&)=cmp>static inline int cmpB(const pair&a,const pair&b){return _cmp(a.b,b.b);}
-		template<int(*_cmp)(const A&,const A&)=cmp>static inline int cmpA2(const pair&a,const A&b){return _cmp(a.a,b);}
-		template<int(*_cmp)(const B&,const B&)=cmp>static inline int cmpB2(const pair&a,const B&b){return _cmp(a.b,b);}
-		template<int(*_cmp)(const A&,const A&)=cmp>static inline int cmpA3(const A&b,const pair&a){return _cmp(b,a.a);}
-		template<int(*_cmp)(const B&,const B&)=cmp>static inline int cmpB3(const B&b,const pair&a){return _cmp(b,a.b);}
 	};
+	//they're not "template<int(*_cmp)(const A&,const A&)=cmp>static" in "struct pair" because apparently "pair<K,V>::cmpA<_cmp>" causes "expected '{' before '>' token" error at the 2nd ">"
+	template<typename A,typename B,int(*_cmp)(const A&,const A&)=cmp>inline int cmpA(const pair<A,B>&a,const pair<A,B>&b){return _cmp(a.a,b.a);}
+	template<typename A,typename B,int(*_cmp)(const B&,const B&)=cmp>inline int cmpB(const pair<A,B>&a,const pair<A,B>&b){return _cmp(a.b,b.b);}
+	template<typename A,typename B,int(*_cmp)(const A&,const A&)=cmp>inline int cmpA2(const pair<A,B>&a,const A&b){return _cmp(a.a,b);}
+	template<typename A,typename B,int(*_cmp)(const B&,const B&)=cmp>inline int cmpB2(const pair<A,B>&a,const B&b){return _cmp(a.b,b);}
+	template<typename A,typename B,int(*_cmp)(const A&,const A&)=cmp>inline int cmpA3(const A&b,const pair<A,B>&a){return _cmp(b,a.a);}
+	template<typename A,typename B,int(*_cmp)(const B&,const B&)=cmp>inline int cmpB3(const B&b,const pair<A,B>&a){return _cmp(b,a.b);}
 
 	//a=startIndex, b is the index where the result of the search is(or should be), c=endIndex, z=array to search in with <cmp>, v=what to search
 	//returns 1 when successfuly found, else 0
@@ -67,7 +68,7 @@ namespace DerKern{
 
 	template<typename T,typename sizeT,sizeT Exp,int(*cmp)(const T&,const T&)>struct SortList;
 	template<typename T,typename sizeT=uint16_t,sizeT Exp=16>struct List{
-		template<typename _T,typename _sizeT,sizeT _Exp,int(*_cmp)(const T&,const T&)>List(const SortList<_T,_sizeT,_Exp,_cmp>&)=delete;
+		template<typename _T,typename _sizeT,sizeT _Exp,int(*_cmp)(const _T&,const _T&)>List(const SortList<_T,_sizeT,_Exp,_cmp>&)=delete;
 		T*raw;sizeT size,count;
 		inline List(){raw=0;size=count=0;}
 		template<typename iT>inline T&operator[](iT i)const{return raw[(sizeT)i];}
@@ -77,7 +78,7 @@ namespace DerKern{
 				#ifdef FASTER
 					sizeT exp=c-(c%Exp)+(c%Exp?Exp:0);
 				#else
-					sizet exp=c-(size-count);exp=exp-(exp%Exp)+(exp%Exp?Exp:0);
+					sizeT exp=c-(size-count);exp=exp-(exp%Exp)+(exp%Exp?Exp:0);
 				#endif
 				assert((size+exp)>=(size|exp));size+=exp;
 				raw=(T*)realloc(raw,size*sizeof(T));
@@ -138,36 +139,36 @@ namespace DerKern{
 	template<typename K,typename V,typename sizeT,sizeT Exp,int(*cmp)(const K&,const K&)>struct Dicto;
 	typedef List<uint8_t,uint64_t,256>BBuf;
 	template<typename T,typename sizeT=uint16_t,sizeT Exp=16,int(*_cmp)(const T&,const T&)=cmp>struct SortList:List<T,sizeT,Exp>{
-		template<typename _K,typename _V,typename _sizeT,sizeT _Exp,int(*_cmp)(const K&,const K&)>SortList(const Dicto<_K,_V,_sizeT,_Exp,_cmp>&)=delete;
-		inline sizeT getI(const T&v)const{sizeT b;BinSearch<T,_cmp>(0,b,count-1,raw,v);return b;}
+		template<typename _K,typename _V,typename _sizeT,sizeT _Exp,int(*cmp)(const _K&,const _K&)>SortList(const Dicto<_K,_V,_sizeT,_Exp,cmp>&)=delete;
+		inline sizeT getI(const T&v)const{sizeT b;BinSearch<T,_cmp>(0,b,this->count-1,this->raw,v);return b;}
 		inline sizeT getI(const T&&v)const{return getI(v);}
-		template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline sizeT getI(const T2&v)const{sizeT b;BinSearch<T,T2,Cmp>(0,b,count-1,raw,v);return b;}
+		template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline sizeT getI(const T2&v)const{sizeT b;BinSearch<T,T2,Cmp>(0,b,this->count-1,this->raw,v);return b;}
 		template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline sizeT getI(const T2&&v)const{return getI<T2,Cmp>(v);}
 
-		inline T*get(const T&v)const{sizeT b;if(BinSearch<T,_cmp>(0,b,count-1,raw,v))return&raw[b];return 0;}
+		inline T*get(const T&v)const{sizeT b;if(BinSearch<T,_cmp>(0,b,this->count-1,this->raw,v))return&this->raw[b];return 0;}
 		inline T*get(const T&&v)const{return get(v);}
-		template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline T*get(const T2&v)const{sizeT b;if(BinSearch<T,T2,Cmp>(0,b,count-1,raw,v))return&raw[b];return 0;}
+		template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline T*get(const T2&v)const{sizeT b;if(BinSearch<T,T2,Cmp>(0,b,this->count-1,this->raw,v))return&this->raw[b];return 0;}
 		template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline T*get(const T2&&v)const{return get<T2,Cmp>(v);}
 
-		inline T&set(const T&v){sizeT b;if(BinSearch<T,_cmp>(0,b,count-1,raw,v))return raw[b]=v;return insert(v,b);}
+		inline T&set(const T&v){sizeT b;if(BinSearch<T,_cmp>(0,b,this->count-1,this->raw,v))return this->raw[b]=v;return insert(v,b);}
 		inline T&set(const T&&v){return set(v);}
-		template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline T&set(const T&v){sizeT b;if(BinSearch<T,Cmp>(0,b,count-1,raw,v))return raw[b]=v;return insert(v,b);}
+		template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline T&set(const T&v){sizeT b;if(BinSearch<T,Cmp>(0,b,this->count-1,this->raw,v))return this->raw[b]=v;return insert(v,b);}
 		template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline T&set(const T2&&v){return set<T2,Cmp>(v);}
-		template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline T&setKV(const T2&k,const T&&v){sizeT b;if(BinSearch<T,T2,Cmp>(0,b,count-1,raw,k))return raw[b]=v;return insert(v,b);}
+		template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline T&setKV(const T2&k,const T&&v){sizeT b;if(BinSearch<T,T2,Cmp>(0,b,this->count-1,this->raw,k))return this->raw[b]=v;return insert(v,b);}
 		// template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline T&setKV(const T2&k,const T&&v){return setKV<T2,Cmp>(k,v);}
 		// template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline T&setKV(const T2&&k,const T&v){return setKV<T2,Cmp>(k,v);}
 		template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline T&setKV(const T2&&k,const T&&v){return setKV<T2,Cmp>(k,v);}
 
 		inline void _insert(T v,sizeT at){insert(v,at);};inline void _insert(T*v,sizeT at,sizeT c){insert(v,at,c);};
-		template<typename sizeT2=uint16_t,sizeT Exp2=16,int(*cmp2)(const T&,const T&)>inline void cpyTo(SortList<T,sizeT2,Exp2,cmp2>&t)const{for(sizeT i=0;i<count;i++)t.set(raw[i]);}
+		template<typename sizeT2=uint16_t,sizeT Exp2=16,int(*cmp2)(const T&,const T&)>inline void cpyTo(SortList<T,sizeT2,Exp2,cmp2>&t)const{for(sizeT i=0;i<this->count;i++)t.set(this->raw[i]);}
 		template<typename sizeT2=uint16_t,sizeT Exp2=16,int(*cmp2)(const T&,const T&)>inline void cpyFrom(SortList<T,sizeT2,Exp2,cmp2>&t){for(sizeT i=0;i<t.count;i++)set(t.raw[i]);}
-		template<typename sizeT2=uint16_t,sizeT Exp2=16,int(*cmp2)(const T&,const T&)>inline void cpyFrom(List<T,sizeT2,Exp2,cmp2>&t){for(sizeT i=0;i<t.count;i++)set(t.raw[i]);}
-		operator List()=delete;
-		protected:using List::cpyFrom;using List::append;using List::insert;using List::operator+=;
+		template<typename sizeT2=uint16_t,sizeT Exp2=16>inline void cpyFrom(List<T,sizeT2,Exp2>&t){for(sizeT i=0;i<t.count;i++)set(t.raw[i]);}
+		operator List<T,sizeT,Exp>()=delete;
+		protected:using List<T,sizeT,Exp>::cpyFrom;using List<T,sizeT,Exp>::append;using List<T,sizeT,Exp>::insert;using List<T,sizeT,Exp>::operator+=;
 	};
-	template<typename K,typename V,typename sizeT=uint16_t,sizeT Exp=16,int(*cmp)(const K&,const K&)=cmp>struct Dicto:SortList<pair<K,V>,sizeT,Exp,pair<K,V>::cmpA<cmp>>{
-		using getI<K,pair<K,V>::cmpA<cmp>>;using get<K,pair<K,V>::cmpA<cmp>>;
-		using set<pair<K,V>,pair<K,V>::cmpA<cmp>>;using setKV<K,pair<K,V>::cmpA<cmp>>;
+	template<typename K,typename V,typename sizeT=uint16_t,sizeT Exp=16,int(*_cmp)(const K&,const K&)=cmp>struct Dicto:SortList<pair<K,V>,sizeT,Exp,cmpA<K,V,_cmp>>{
+		//using SortList<pair<K,V>,sizeT,Exp,cmpA<K,V,_cmp>>::getI<K,cmpA<K,V,_cmp>>;using SortList<pair<K,V>,sizeT,Exp,cmpA<K,V,_cmp>>::get<K,cmpA<K,V,_cmp>>;
+		//using SortList<pair<K,V>,sizeT,Exp,cmpA<K,V,_cmp>>::set<pair<K,V>,cmpA<K,V,_cmp>>;using SortList<pair<K,V>,sizeT,Exp,cmpA<K,V,_cmp>>::setKV<K,cmpA<K,V,_cmp>>;
 		/*inline V*get(const K&k)const{
 			sizeT a=0,b,c=count-1;
 			while(c>a){
@@ -178,10 +179,9 @@ namespace DerKern{
 			}
 			return 0;
 		}inline V*get(const K&&k)const{return get(k);}*/
-		inline V&set(const K&k,const V&v){sizeT b;if(BinSearch<pair<K,V>,K,K,pair<K,V>::cmpA2<cmp>>(0,b,count-1,raw,k))return raw[b].b=v;return insert({k,v},b);}
+		inline V&set(const K&k,const V&v){sizeT b;if(BinSearch<pair<K,V>,K,K,cmpA2<K,V,_cmp>>(0,b,this->count-1,this->raw,k))return this->raw[b].b=v;return insert({k,v},b);}
 		inline V&set(const K&k,const V&&v){return set(k,v);}inline V&set(const K&&k,const V&v){return set(k,v);}inline V&set(const K&&k,const V&&v){return set(k,v);}
 		inline V&operator[](const K&k)const{return*get(k);}inline V&operator[](const K&&k)const{return*get(k);}
-		operator List()=delete;operator SortList()=delete;
 	};
 	namespace Allocery{
 		struct Allo{
@@ -191,14 +191,6 @@ namespace DerKern{
 		struct Allo2:Allo{
 			virtual void vfree(void*)=0;
 		};struct Allo2Loggy:Allo2{inline Allo2Loggy(Allo2*z){next=z;}inline void*alloc(uint32_t s){auto _=valloc(s);printf("Allocated %lu bytes: %p",s,_);return _;}inline void free(void*_){vfree(_);printf("Freed %p",_);}void*valloc(uint32_t)override;void vfree(void*)override;};
-		template<uint32_t size>struct StackLinear:Allo{
-			uint32_t i;uint8_t raw[size];
-			inline Linear(){i=0;}
-			inline void*alloc(uint32_t s){
-				if(size-i<s){if(!next)next=new Linear();return next.alloc(s);}
-				auto _i=i;i+=s;return raw+(_i);
-			}void*valloc(uint32_t s)override{return alloc(s);}
-		};
 		struct Linear:Allo,List<uint8_t,uint32_t,0>{//who would've thought that I'll actually NEED linked lists... I still hate them though.
 			inline Linear(void*r,uint32_t s):List(){size=s;raw=(uint8_t*)r;}//you'll probably want to get rid of <raw> before the destructor comes
 			inline Linear(uint32_t s):Linear(malloc(s),s){}
@@ -207,6 +199,14 @@ namespace DerKern{
 				if(size-count>s){count+=s;return raw+(count-s);}else{return (next?next:next=new Linear())->valloc(s);}
 			}void*valloc(uint32_t s)override;
 			inline~Linear(){free(raw);delete next;}
+		};
+		template<uint32_t size>struct StackLinear:Allo{
+			uint32_t i;uint8_t raw[size];
+			inline StackLinear(){i=0;}
+			inline void*alloc(uint32_t s){
+				if(size-i<s){if(!next)next=new Linear();return next->valloc(s);}
+				auto _i=i;i+=s;return raw+(_i);
+			}void*valloc(uint32_t s)override{return alloc(s);}
 		};
 		struct BArr:Allo2{
 			constexpr static uint32_t DEFAULT_SIZE=32*1024;

@@ -3,7 +3,7 @@
 namespace DerKern::ASCII{
 	char spec[256]={0};
 	bool namable[256]={0};
-	namespace{INITIALIZER(init)(){
+	namespace{INITIALIZER(init){
 			spec['n']='\n';spec['r']='\r';
 			spec['t']='\t';spec['v']='\v';
 			spec['"']='"';spec['\'']='\'';
@@ -18,24 +18,25 @@ namespace DerKern::ASCII{
 	#define int(a,b,c,d) a##b##c##d
 	#define pI(a,u) bool u##a(Inputo::Universa*I,int(u,int,a,_t)*_z){\
 		char c;if(!I->peek(&c,1))return 0;\
-		bool r=0;int(u,int,a,_t)z=0;if(c=='-'){r=1;(*I)++;if(I->peek(&c,1)&&c<'0'||c>'9')return(*I)--&&0;}else if(c<'0'||c>'9')return 0;\
+		bool r=0;int(u,int,a,_t) z=0;if(c=='-'){r=1;(*I)++;if(I->peek(&c,1)&&c<'0'||c>'9')return(*I)--&&0;}else if(c<'0'||c>'9')return 0;\
 		while(I->get(&c,1)&&c>='0'&&c<='9')z=(10*z)+c-'0';\
-		*_z=r?(decltype(*_z))-z:z;\
+		*_z=r?(int(u,int,a,_t))-z:z;\
 		return 1;\
 	}
-	#define ints(a) pI(a,u)pI(a,)
+	#define ___NOTH
+	#define ints(a) pI(a,u)pI(a,___NOTH)
 	ints(8)ints(16)ints(32)ints(64)
 	bool f(Inputo::Universa*I,float*_z){
 		char c;if(!I->peek(&c,1))return 0;
 		bool r=0,d=0;float z=0,_=.1;if(c=='-'){r=1;(*I)++;if(I->peek(&c,1)&&c<'0'||c>'9')return(*I)--&&0;}else if(c<'0'||c>'9')return 0;
-		while(I->get(&c,1)&&c>='0'&&c<='9')if(c=='.')d=1;else if(d){z=_*(c-'0')+z;_/=10;}else*z=(10*z)+c-'0';
+		while(I->get(&c,1)&&c>='0'&&c<='9')if(c=='.')d=1;else if(d){z=_*(c-'0')+z;_/=10;}else z=(10*z)+c-'0';
 		*_z=r?-z:z;
 		return 1;
 	}
 	bool d(Inputo::Universa*I,double*_z){
 		char c;if(!I->peek(&c,1))return 0;
 		bool r=0,d=0;double z=0,_=.1;if(c=='-'){r=1;(*I)++;if(I->peek(&c,1)&&c<'0'||c>'9')return(*I)--&&0;}else if(c<'0'||c>'9')return 0;
-		while(I->get(&c,1)&&c>='0'&&c<='9')if(c=='.')d=1;else if(d){z=_*(c-'0')+z;_/=10;}else*z=(10*z)+c-'0';
+		while(I->get(&c,1)&&c>='0'&&c<='9')if(c=='.')d=1;else if(d){z=_*(c-'0')+z;_/=10;}else z=(10*z)+c-'0';
 		*_z=r?-z:z;
 		return 1;
 	}
