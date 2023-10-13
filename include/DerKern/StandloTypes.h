@@ -67,7 +67,7 @@ namespace DerKern{
 
 	template<typename T,typename sizeT,sizeT Exp,int(*cmp)(const T&,const T&)>struct SortList;
 	template<typename T,typename sizeT=uint16_t,sizeT Exp=16>struct List{
-		template<typename T,typename sizeT,sizeT Exp,int(*cmp)(const T&,const T&)>List(const SortList&)=delete;
+		template<typename _T,typename _sizeT,sizeT _Exp,int(*_cmp)(const T&,const T&)>List(const SortList<_T,_sizeT,_Exp,_cmp>&)=delete;
 		T*raw;sizeT size,count;
 		inline List(){raw=0;size=count=0;}
 		template<typename iT>inline T&operator[](iT i)const{return raw[(sizeT)i];}
@@ -138,7 +138,7 @@ namespace DerKern{
 	template<typename K,typename V,typename sizeT,sizeT Exp,int(*cmp)(const K&,const K&)>struct Dicto;
 	typedef List<uint8_t,uint64_t,256>BBuf;
 	template<typename T,typename sizeT=uint16_t,sizeT Exp=16,int(*_cmp)(const T&,const T&)=cmp>struct SortList:List<T,sizeT,Exp>{
-		template<typename K,typename V,typename sizeT,sizeT Exp,int(*_cmp)(const K&,const K&)>SortList(const Dicto&)=delete;
+		template<typename _K,typename _V,typename _sizeT,sizeT _Exp,int(*_cmp)(const K&,const K&)>SortList(const Dicto<_K,_V,_sizeT,_Exp,_cmp>&)=delete;
 		inline sizeT getI(const T&v)const{sizeT b;BinSearch<T,_cmp>(0,b,count-1,raw,v);return b;}
 		inline sizeT getI(const T&&v)const{return getI(v);}
 		template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline sizeT getI(const T2&v)const{sizeT b;BinSearch<T,T2,Cmp>(0,b,count-1,raw,v);return b;}
@@ -187,10 +187,10 @@ namespace DerKern{
 		struct Allo{
 			Allo*next=0;
 			virtual void*valloc(uint32_t)=0;
-		};struct AlloLoggy{inline AlloLoggy(Allo*z){next=z;}inline void*alloc(uint32_t s){auto _=valloc(s);printf("Allocated %lu bytes: %p",s,p);return _;}void*valloc(uint32_t)override;};
+		};struct AlloLoggy:Allo{inline AlloLoggy(Allo*z){next=z;}inline void*alloc(uint32_t s){auto _=valloc(s);printf("Allocated %lu bytes: %p",s,_);return _;}void*valloc(uint32_t)override;};
 		struct Allo2:Allo{
 			virtual void vfree(void*)=0;
-		};struct Allo2Loggy{inline Allo2Loggy(Allo2*z){next=z;}inline void*alloc(uint32_t s){auto _=valloc(s);printf("Allocated %lu bytes: %p",s,p);return _;}inline void free(void*){auto _=vfree(s);printf("Freeing %p",s,p);return _;}void*valloc(uint32_t)override;void vfree(void*)override;};
+		};struct Allo2Loggy:Allo2{inline Allo2Loggy(Allo2*z){next=z;}inline void*alloc(uint32_t s){auto _=valloc(s);printf("Allocated %lu bytes: %p",s,_);return _;}inline void free(void*_){vfree(_);printf("Freed %p",_);}void*valloc(uint32_t)override;void vfree(void*)override;};
 		template<uint32_t size>struct StackLinear:Allo{
 			uint32_t i;uint8_t raw[size];
 			inline Linear(){i=0;}
@@ -198,7 +198,7 @@ namespace DerKern{
 				if(size-i<s){if(!next)next=new Linear();return next.alloc(s);}
 				auto _i=i;i+=s;return raw+(_i);
 			}void*valloc(uint32_t s)override{return alloc(s);}
-		}
+		};
 		struct Linear:Allo,List<uint8_t,uint32_t,0>{//who would've thought that I'll actually NEED linked lists... I still hate them though.
 			inline Linear(void*r,uint32_t s):List(){size=s;raw=(uint8_t*)r;}//you'll probably want to get rid of <raw> before the destructor comes
 			inline Linear(uint32_t s):Linear(malloc(s),s){}
@@ -209,15 +209,17 @@ namespace DerKern{
 			inline~Linear(){free(raw);delete next;}
 		};
 		struct BArr:Allo2{
-			uint32_t size;uint8_t raw;
+			constexpr static uint32_t DEFAULT_SIZE=32*1024;
+			uint32_t size;uint8_t*raw;
 			uint32_t I[128],anew;uint16_t Ic;
-			inline BArr(void*r,uint32_t s){anew=0;raw=r;size=s;}
+			inline BArr(void*r,uint32_t s){anew=0;raw=(uint8_t*)r;size=s;}
+			inline BArr(uint32_t s):BArr(malloc(s),s){}
 			void*alloc(uint32_t s);void*valloc(uint32_t s)override;
-			void free(void*);void*vfree(uint32_t s)override;
+			void free(void*);void vfree(void*)override;
 		};
 		struct BArrA:BArr{
-			inline BArrA(uint32_t s){anew=0;raw=(uint8_t*)malloc(s);size=s;}
-			inline~BArrA(){free(raw);delete next;}			
+			inline BArrA(uint32_t s):BArr(malloc(s),s){}
+			inline~BArrA(){free(raw);delete next;}
 		};
 	}
 }

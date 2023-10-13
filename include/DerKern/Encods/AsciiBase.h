@@ -1,5 +1,5 @@
 #pragma once
-#include"../Standlo.h"
+#include"../StandloTypes.h"
 #include"../Inputo.h"
 namespace DerKern{
 	namespace ASCII{

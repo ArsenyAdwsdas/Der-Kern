@@ -40,7 +40,7 @@ namespace DerKern{
 			inline char getC(){if(!ensure(1))return 0;i++;return ((char*)data)[i-1];}
 			inline uint64_t peek(void*dst,uint64_t siz){siz=ensure(siz);memcpy(dst,(char*)data+i,siz);return siz;}//i+=<how much can peek>, returns how much could peek
 			inline char peekC(){if(!ensure(1))return 0;return((char*)data)[i];}
-			inline bool expect(char c){if(ensure(1)&&((char*)data)[i]==c){(*this)++;return 1;}return 0;}
+			inline bool expect(char c){if(ensure(1)&&((char*)data)[i]==c){operator++();return 1;}return 0;}
 			template<uint16_t S>inline bool expect(char c[S]){if((ensure(S-1)>=S-1)&&memcmp((char*)data+i,c,S-1)==0){(*this)+=S-1;return 1;}return 0;}
 		};
 		struct RFileHP{//tries to move by half size
@@ -48,9 +48,9 @@ namespace DerKern{
 			FILE*f;void*data;size_t size;
 			uint64_t fI,i;
 			inline uint64_t operator=(uint64_t z){fI=z;i=0;_fseeki64(f,z,SEEK_SET);return fread(data,1,z,f);}//returns available bytes there out of <size>
-			inline RFile(FILE*F){f=F;size=DEFAULT_SIZE;data=malloc(size);*this=(uint64_t)0;}
-			inline RFile(FILE*F,size_t s){f=F;size=s;data=malloc(s);*this=(uint64_t)0;}
-			inline RFile(FILE*F,void*d,size_t s){f=F;size=s;data=d;*this=(uint64_t)0;}
+			inline RFileHP(FILE*F){f=F;size=DEFAULT_SIZE;data=malloc(size);*this=(uint64_t)0;}
+			inline RFileHP(FILE*F,size_t s){f=F;size=s;data=malloc(s);*this=(uint64_t)0;}
+			inline RFileHP(FILE*F,void*d,size_t s){f=F;size=s;data=d;*this=(uint64_t)0;}
 			inline uint64_t _ensure(){//[?previously loaded?]<i><loaded?>, returns how much ensured
 				uint64_t z=(size>>1);
 				uint64_t _=size-i;assert(size>=z);if(_>z)return z;uint64_t _2=z-_;
@@ -73,10 +73,10 @@ namespace DerKern{
 			inline bool operator--(){return(*this)-=(uint64_t)1;}//returns whether could do that
 			inline uint64_t ensureBack(uint64_t z){assert(i>=z);if(i>z){uint64_t _=i+z;z=((*this)-=z);i=_;return z;}else return(*this)-=z;}//ensures <loaded?><i>[?previously loaded?]
 			inline uint64_t get(void*dst,uint64_t siz){siz=ensure(siz);memcpy(dst,(char*)data+i,siz);i+=siz;return siz;}//i+=<how much can get>, returns how much got
-			inline char getC(){if(!_ensure(1))return 0;i++;return ((char*)data)[i-1];}
+			inline char getC(){if(!_ensure())return 0;i++;return ((char*)data)[i-1];}
 			inline uint64_t peek(void*dst,uint64_t siz){siz=ensure(siz);memcpy(dst,(char*)data+i,siz);return siz;}//i+=<how much can peek>, returns how much could peek
-			inline char peekC(){if(!_ensure(1))return 0;return((char*)data)[i];}
-			inline bool expect(char c){if(_ensure(1)&&((char*)data)[i]==c){(*this)++;return 1;}return 0;}
+			inline char peekC(){if(!_ensure())return 0;return((char*)data)[i];}
+			inline bool expect(char c){if(_ensure()&&((char*)data)[i]==c){operator++();return 1;}return 0;}
 			template<uint16_t S>inline bool expect(char c[S]){if((_ensure(S-1)>=S-1)&&memcmp((char*)data+i,c,S-1)==0){(*this)+=S-1;return 1;}return 0;}
 		};
 		struct Universa{
@@ -103,17 +103,17 @@ namespace DerKern{
 			inline uint64_t ensure(uint64_t z){
 				if(type==3)return f2.ensure(z);
 				if(type==2)return f.ensure(z);
-				if(type==1){if(c.size-i>z)return r;return c.size-i;}
+				if(type==1){if(c.size-i>z)return z;return c.size-i;}
 			}
 			template<typename t>inline t operator+=(t z){
-				if(type==3)return f2+=z;
-				if(type==2)return f+=z;
+				if(type==3)return f2+=(int64_t)z;
+				if(type==2)return f+=(int64_t)z;
 				if(type==1){if(-z>i){uint64_t _=i;i=0;return _;}else if(i+z>c.size){uint64_t _=i;i=c.size;return c.size-_;}i+=z;return z;}
 			}
 			inline bool operator++(){return(*this)+=(bool)1;}
 			template<typename t>inline t operator-=(t z){
-				if(type==3)return f2-=z;
-				if(type==2)return f-=z;
+				if(type==3)return f2-=(int64_t)z;
+				if(type==2)return f-=(int64_t)z;
 				if(type==1){if(z>i){uint64_t _=i;i=0;return _;}else if(i-z>c.size){uint64_t _=i;i=c.size;return c.size-_;}i-=z;return z;}
 			}
 			inline bool operator--(){return(*this)-=(bool)1;}
@@ -130,17 +130,17 @@ namespace DerKern{
 			inline size_t peek(void*dst,uint64_t siz){
 				if(type==3)return f2.peek(dst,siz);
 				if(type==2)return f.peek(dst,siz);
-				if(type==1){siz=c.peek(dst,i,siz);i+=siz;return siz;}
+				if(type==1){siz=c.get(dst,i,siz);i+=siz;return siz;}
 			}
 			inline char peekC(){
 				if(type==3)return f2.peekC();
 				if(type==2)return f.peekC();
 				if(type==1){if(c.size>=i)return 0;return((char*)c.data)[i];}
 			}
-			inline bool expect(char c){
-				if(type==3)return f2.expect(c);
-				if(type==2)return f.expect(c);
-				if(type==1){if(ensure(1)&&((char*)c.data)[i]==c){i++;return 1;}return 0;}
+			inline bool expect(char C){
+				if(type==3)return f2.expect(C);
+				if(type==2)return f.expect(C);
+				if(type==1){if(ensure(1)&&((char*)c.data)[i]==C){i++;return 1;}return 0;}
 			}
 			template<uint16_t S>inline bool expect(char c[S]){
 				if(type==3)return f2.expect(c);
