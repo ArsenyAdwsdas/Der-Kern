@@ -1,14 +1,12 @@
-#include"../include/DerKern/Allocery.h"
+#include"../include/DerKern/Standlo.h"
 namespace DerKern{
+	int cmp(const string&a,const string&b){return a.compare(b);}
 	namespace Allocery{
 		void*AlloLoggy::valloc(uint32_t s){return alloc(s);}
 		void*AlloLoggy2::valloc(uint32_t s){return alloc(s);}void AlloLoggy2::vfree(void*_){return free(_);}
 		void*StackLinear::valloc(uint32_t s){return alloc(s);}
 		void*Linear::valloc(uint32_t s){return alloc(s);}
 		void*BArr::alloc(uint32_t s){
-			if(anew!=(uint32_t)-1){
-				if(size-anew>=s+2){auto _=raw+anew;anew+=2+s;*(uint16_t*)(_)=s;return _+2;}else anew=-1;
-			}
 			//reuse
 			for(uint32_t i=0;i<(sizeof(I)/sizeof(*I));i++)if(I[i]!=(uint32_t)-1){
 				auto siz=*(uint16_t*)(raw+I[i]);if(s+2>siz);else{
@@ -19,6 +17,9 @@ namespace DerKern{
 					}else*(uint16_t*)_=siz;
 					return _+2;
 				}
+			}
+			if(anew!=(uint32_t)-1){
+				if(size-anew>=s+2){auto _=raw+anew;anew+=2+s;*(uint16_t*)(_)=s;return _+2;}else anew=-1;
 			}
 			if(!next)next=new BArr();
 			return next->alloc(s);
