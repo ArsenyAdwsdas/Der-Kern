@@ -1,6 +1,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include"src/DerKern.cpp"
+#include"Encods/Ascii_CLITERAL.cpp"
 
 using namespace DerKern;
 template<size_t S>inline bool Command(const char(&cmd)[S],const char*str,uint64_t*i,uint64_t siz){
@@ -20,6 +21,48 @@ void SPACES(uint64_t*i,string s){assert(s.size()>*i&&(s.at(*i)==' '||s.at(*i)=='
 #define _MAX_PATH 260
 #warning _MAX_PATH!
 #endif
+#warning test.cpp isn't ready!
+InstructionWithOutput*value(Inputo::Universa*In,pair<Type*,Location>&V){//if no Type/Location then it sets that by itself, returns 0 if failed.
+	auto _=ASCII::CLITERAL(in,V);
+	if(_)return _;
+
+	BBuf z;char c;uint64_t i=I->getI();
+	if(!I->peek(&c,1))return 0;
+	if(c=='`'&&(*I)++){
+		while(I->peek(&c,1)&&c!='`')if(!ch(I,&z)){I->setI(i);return 0;}
+		V.a=&Type::str;return new Instructions::set(V.b,string((char*)z.raw,z.count));
+	}
+
+	return 0;
+}
+/*bool value_UOpy(Inputo::Universa*In,pair<Type*,Location>&V,List<Instruction*>*Is){
+	spaces(In);uint64_t i,u;char c;if(!In->get(&c,1))return 0;i=In.getI();Instruction*I;
+	pair<Type*,Location>_V;_V.a=0;
+	#ifndef HASTE
+		if(I=_value(In,V));else
+	#endif
+	switch(c){
+		case '=':I=value(In,_V);if(I){I=new Instructions::UOp::Equ(I,V);(*Is)+=I;}break;
+		case '$':I=value(In,_V);if(I){I=new Instructions::UOp::Dolla(I,V);(*Is)+=I;}break;
+		case '#':I=value(In,_V);if(I){I=new Instructions::UOp::Hash(I,V);(*Is)+=I;}break;
+		case '+':I=value(In,_V);if(I){I=new Instructions::UOp::Plugate(I,V);(*Is)+=I;}break;
+		case '~':I=value(In,_V);if(I){I=new Instructions::UOp::BNot(I,V);(*Is)+=I;}break;
+		case '!':I=value(In,_V);if(I){I=new Instructions::UOp::Not(I,V);(*Is)+=I;}break;
+		case '*':I=value(In,_V);if(I){I=new Instructions::UOp::Star(I,V);(*Is)+=I;}break;
+		case '-':I=value(In,_V);if(I){I=new Instructions::UOp::Negate(I,V);(*Is)+=I;}
+		#ifdef HASTE
+			break;default:(*In)--;I=_value(In,V);
+		#endif
+	}if(!I)In.setI(i);return I;
+}*/
+/*bool expr(Inputo::Universa*In,pair<Type*,Location>&V,List<Instruction*>*out){
+	List<Instruction*>_;
+	List<pair<List<Instruction*>,TypeDesc::Ops>>extras;
+	if(!value(In,v,_))return 0;
+	if(In->expect('%')){
+		extras+={_,In->expect('=')?TypeDesc::Ops::modE:TypeDesc::Ops::mod}
+	}
+}*/
 bool DerKern::Parse1(uint64_t*i,string S,ParseResult*r){
 	uint64_t siz=S.size(),_i=*i;
 	auto s=S.c_str();
@@ -56,7 +99,7 @@ bool DerKern::Parse1(uint64_t*i,string S,ParseResult*r){
 	if(!ASCII::any(i,S,&r))return (Instruction*)(uint64_t)-1;
 	if(r.type==)*/
 	pair<Type*,Location>_;
-	if(ASCII::value(i,S,&_))return 1;
+	if(value(i,S,&_))return 1;
 	return 0;
 }
 void print(int32_t a){printf("%d\n",a);}

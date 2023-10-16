@@ -2,21 +2,21 @@
 #include"StandloTypes.h"
 namespace DerKern{
 	struct Location{
-		enum Types:uint8_t{
+		enum class Types:uint8_t{
 			undecided=0,//non-existent
 			imovbl=1,//forever at pointer, maybe you don't want to get rid that place... just saying...
 			reg=2,dReg=reg|imovbl//register/dereferenced register
-		}type;
+		};uint8_t type;
 		int32_t imov;//if(type==1)v=*(*)(uint32_t)imov;if(type==dReg)v=*((*)reg+imov)
 		uint8_t reg;//register
-		inline operator uint8_t(){return type&4?reg.r:(uint8_t)-1;}
+		inline operator uint8_t(){return type&4?reg:(uint8_t)-1;}
 		inline Location(){type=0;}
 		inline Location(int32_t o){type=1;imov=o;}
 		inline Location(uint8_t r){type=2;reg=r;}
 		inline Location(uint8_t r,int32_t o){type=2;reg=r;imov=o;}
 	};
 	typedef Location FLocation;
-	struct _Variable;struct Variable;struct TypePtr;
+	struct _Variable;struct Variable;struct Type;
 	/*struct _Func{
 		bool mayChange[RegisterCount];
 		//bool external;//may or may not need registers from C++
@@ -39,17 +39,16 @@ namespace DerKern{
 	inline void*&FuncHead_ArgV(FuncHead z){return*(void**)(1+&FuncHead_ArgC(z));}
 	
 	struct _Variable{
-		TypePtr type;
+		Type*type;
 		union{
 			Location val;
-			uint64_t
 		};
 		inline _Variable():type(0),val(){}
-		inline _Variable(Type t,Location v):type(t),val(v){}
+		inline _Variable(Type*t,Location v):type(t),val(v){}
 	};
 	struct Variable:_Variable{
 		string name;
 		inline Variable(_Variable z,string n):name(n){*(_Variable*)this=z;}
-		inline Variable(TypePtr t,Location v,string n):name(n),type(t),val(v){}
+		inline Variable(Type*t,Location v,string n):name(n),_Variable(t,v){}
 	};
 }

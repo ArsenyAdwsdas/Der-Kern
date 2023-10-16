@@ -41,20 +41,43 @@ namespace DerKern{
 			void eval(EvalState&)override;
 		};
 		
-		struct NopO:Return0{pair<Type*,Location>v;void compile(CompileState&)override;void eval(EvalState&)override;}//a base instruction that "outputs" a value
+		struct NopO:Return0{pair<Type*,Location>v;inline NopO(pair<Type*,Location>out){v=out;}void compile(CompileState&)override;void eval(EvalState&)override;}//a base instruction that "outputs" a value
 		struct Init:NopO{pair<Type*,Location>v;void compile(CompileState&)override;void eval(EvalState&)override;}//calls default constructor
+		#warning Instruction.h ain't ready for use.
 		namespace UOps{
-			struct Not:NopO{//!
+			struct Equ:NopO{//!
 				NopO*a;//input comes from here
-				inline Not(Return0*in,pair<Type*,Location>out){a=in;v=out;}
+				inline Equ(NopO*in,pair<Type*,Location>out):NopO(out){a=in;}
 				void compile(CompileState&)override;void eval(EvalState&)override;
 			};
-			//~,*,-,=,$,#,+
-			#define __UOp(name) struct name:Not{inline name(Return0*in,pair<Type*,Location>out):Not(in,out){}void compile(CompileState&)override;void eval(EvalState&)override;};
-				__UOp(BNot)__UOp(Star)__UOp(Negate)__UOp(Equ)__UOp(Dolla)__UOp(Hash)__UOp(Plugate)
+			#define __UOp(name) struct name:Equ{inline name(NopO*in,pair<Type*,Location>out):Equ(in,out){}void compile(CompileState&)override;void eval(EvalState&)override;};
+				__UOp(Negate)__UOp(Plusate)//-,+
+				__UOp(Not)__UOp(BNot)//!,~
+				__UOp(Star)//*
+				__UOp(Dolla)__UOp(Hash)//$,#
 			#undef __UOp
+		}
+		namespace Ops{
+			struct Set:UOps::Equ{//=
+				NopO*b;//second input
+				inline Set(NopO*in,NopO*in2,pair<Type*,Location>out):Not(in,out){b=in2;}
+				void compile(CompileState&)override;void eval(EvalState&)override;
+			};
+			#define __Op(name) struct name:Set{inline name(NopO*in,NopO*in2,pair<Type*,Location>out):Set(in,in2,out){}void compile(CompileState&)override;void eval(EvalState&)override;};
+				__UOp(Plus)__UOp(Minus)__UOp(Mul)__UOp(Div)//+,-,*,/
+				__UOp(PlusE)__UOp(MinusE)__UOp(MulE)__UOp(DivE)//+=,-=,*=,/=
+
+				__UOp(BOr)__UOp(BAnd)__UOp(BXor)__UOp(Mod)//|,&,^,%
+				__UOp(BOrE)__UOp(BAndE)__UOp(BXorE)__UOp(ModE)//|=,&=,^=,%=
+
+				__UOp(Left)__UOp(BLeft)__UOp(BRight)__UOp(Right)//<,<<,>>,>
+				__UOp(LeftE)__UOp(BLeftE)__UOp(BRightE)__UOp(RightE)//<=,<<=,>>=,>=
+
+				__UOp(Or)__UOp(And)__UOp(Eq)__UOp(NEq)//||,&&,==,!=
+			#undef __Op
 		}
 	}
 	typedef Instructions::Return0 Instruction;
 	typedef Instructions::NopO InstructionWithOutput;
+	typedef Instructions::UOps::Equ UOpInstruction;
 }

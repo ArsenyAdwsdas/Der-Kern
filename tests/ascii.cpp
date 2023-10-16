@@ -1,4 +1,4 @@
-#include"../src/Encods/AsciiBase.cpp"
+#include"../src/Encods/Ascii.cpp"
 
 using namespace DerKern;
 // How shady... Eh, not like I change it anyway so (char*)"" seems fine here to both me and, for whatever reason, the compiler...
