@@ -1,4 +1,4 @@
-#include"../../include/DerKern/Encods/AsciiBase.h"
+#include"../../include/DerKern/Encods/Ascii.h"
 #include"../StandloTypes.cpp"
 namespace DerKern::ASCII{
 	char spec[256]={0};
@@ -63,9 +63,9 @@ namespace DerKern::ASCII{
 	}
 	bool str(Inputo::Universa*I,string*_z){
 		BBuf z;char c;uint64_t i=I->getI();
-		if(!I->peek(&c,1))return 0;
-		if(c=='"'){(*I)++;while(I->peek(&c,1)&&c!='"')if(c=='\n'||!ch(I,&z)){I->setI(i);return 0;}}
-		else return 0;*_z=string((char*)z.raw,z.count);return 1;
+		if(!I->peek(&c,1)||c!='"')return 0;(*I)++;
+		while(I->peek(&c,1)&&c!='"')if(c=='\n'||!ch(I,&z)){I->setI(i);return 0;}
+		*_z=string((char*)z.raw,z.count);return 1;
 	}
 	bool name(Inputo::Universa*I,string*_z){
 		BBuf z;char c;uint64_t i=I->getI();

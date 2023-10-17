@@ -112,14 +112,14 @@ namespace DerKern{
 			template<typename t>inline t operator+=(t z){
 				if(type==3)return f2+=(int64_t)z;
 				if(type==2)return f+=(int64_t)z;
-				if(type==1){if(-z>c.i){uint64_t _=c.i;c.i=0;return _;}else if(c.i+z>c.c.size){uint64_t _=c.i;c.i=c.c.size;return c.c.size-_;}c.i+=z;return z;}
+				if(type==1){if(0>z&&-z>c.i){uint64_t _=c.i;c.i=0;return _;}else if(c.i+z>c.c.size){uint64_t _=c.i;c.i=c.c.size;return c.c.size-_;}c.i+=z;return z;}
 				return 0;
 			}
 			inline bool operator++(){return(*this)+=(bool)1;}inline bool operator++(int){return(*this)+=(bool)1;}
 			template<typename t>inline t operator-=(t z){
 				if(type==3)return f2-=(int64_t)z;
 				if(type==2)return f-=(int64_t)z;
-				if(type==1){if(z>c.i){uint64_t _=c.i;c.i=0;return _;}else if(c.i-z>c.c.size){uint64_t _=c.i;c.i=c.c.size;return c.c.size-_;}c.i-=z;return z;}
+				if(type==1){if(0>-z&&z>c.i){uint64_t _=c.i;c.i=0;return _;}else if(c.i-z>c.c.size){uint64_t _=c.i;c.i=c.c.size;return c.c.size-_;}c.i-=z;return z;}
 				return 0;
 			}
 			inline bool operator--(){return(*this)-=(bool)1;}inline bool operator--(int){return(*this)-=(bool)1;}

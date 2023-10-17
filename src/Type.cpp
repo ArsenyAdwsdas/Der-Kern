@@ -1,3 +1,4 @@
+#pragma once
 #include"../include/DerKern/Type.h"
 #include"Allocery.cpp"
 #include"Erroring.cpp"
@@ -9,41 +10,53 @@ namespace DerKern{
 	Type Type::f=Type("float",sizeof(float));Type Type::d=Type("double",sizeof(double));
 	Type Type::str=Type("string",sizeof(int*));Type Type::_type=Type("type",sizeof(Type));
 	Type Type::VOID=Type("void",1);
+	Type Type::const_container=Type("<CONST>",0);Type Type::array_container=Type("<ARRAY>",0);
 	Type Type::func_container=Type("<FUNCTION>",FuncHead_size);
 	Type Type::idk[16];
 	namespace{INITIALIZER(init){
 		static const char _idk[]="idk0\0idk1\0idk2\0idk3\0idk4\0idk5\0idk6\0idk7\0idk8\0idk9\0idk10\0idk11\0idk12\0idk13\0idk14\0idk15";
 		for(uint8_t i=0;i<50;i+=5)Type::idk[i]=Type(_idk+i,Type::PtrSize);for(uint8_t i=45;i<81;i+=6)Type::idk[i]=Type(_idk+i,Type::PtrSize);
-		//Type::VOID.size=0;Type::VOID.ptr2Valid=Type::VOID.ptr3Valid=0;
+		Type::VOID.size=0;
 	}}
 	Ptr1Type*Type::pointer(){
+		if(isFinal){Error("An attempt to have a * pointer with a type that doesn't allow it");return 0;}//decided to write it like having a child
 		if(_pointer)return _pointer;
-		#ifndef NO_SANITY
+		#ifndef NO_SANITY//Seems like a more sane way than "if(typeID==)"+"(TypeModifier*)"... Not like I care about sanity though... Just that it would look like too much.
 			if(name.size()>4&&name.substr(name.size()-4,4)=="****"){Error("Sanity Error");return 0;}
 		#endif
-		if(!ptr1Valid){Error("An attempt to have a * pointer with a type that doesn't allow it");return 0;}
-		return _pointer=new Ptr1Type(this);
-		
+		_pointer=new Ptr1Type(this);_pointer->parent=ptr1_container;
+		return _pointer;
 	}Ptr1Type*Type::ptr1_container=Type::VOID.pointer();
 	Ptr2Type*Type::pointer2(){
+		if(!size||isFinal){Error("An attempt to have a & pointer with a type that doesn't allow it");return 0;}
 		if(_pointer2)return _pointer2;
-		if(!ptr2Valid){Error("An attempt to have a & pointer with a type that doesn't allow it");return 0;}
-		return _pointer2=new Ptr2Type(this);
-	}//Ptr2Type*Type::ptr2_container=Type::VOID.pointer2();
+		_pointer2=new Ptr2Type(this);_pointer2->parent=ptr2_container;
+		return _pointer2;
+	}Ptr2Type*Type::ptr2_container=Type::VOID.pointer2();
 	Ptr3Type*Type::pointer3(){
+		if(!size||isFinal){Error("An attempt to have a && pointer with a type that doesn't allow it");return 0;}
 		if(_pointer3)return _pointer3;
-		if(!ptr3Valid){Error("An attempt to have a && pointer with a type that doesn't allow it");return 0;}
-		return _pointer3=new Ptr3Type(this);
-	}//Ptr3Type*Type::ptr3_container=Type::VOID.pointer3();
+		_pointer3=new Ptr3Type(this);_pointer3->parent=ptr3_container;
+		return _pointer3;
+	}Ptr3Type*Type::ptr3_container=Type::VOID.pointer3();
+	ConstType*Type::Const(){
+		if(!size){Error("An attempt to \"const\" a basically mythological(non-existent like \"void\") type");return 0;}
+		if(_const)return _const;
+		_const=new ConstType(this);_const->parent=&const_container;
+		return _const;
+	}
+	static int cmp(ArrayType*const&a,const uint32_t &b){return cmp(a->count,b);}
 	ArrayType*Type::array(uint32_t count){
-		string s=ArrayType::NAME(this,count);
-		uint16_t b;if(BinSearch<Type*,string,cmp,uint16_t>(0,b,_arrays.count,_arrays.raw,s))return(ArrayType*)_arrays[b];
-		return(ArrayType*)_arrays._insert(new ArrayType(s,this,count),b);
+		if(isFinal){Error("An attempt to array a type that doesn't allow it");return 0;}
+		uint16_t b;if(BinSearch<ArrayType*,uint32_t,cmp,uint16_t>(0,b,_arrays.count,(ArrayType**)_arrays.raw,count))return(ArrayType*)_arrays[b];
+		auto z=_arrays._insert(new ArrayType(this,count),b);z->parent=&array_container;
+		return(ArrayType*)z;
 	}
 	FuncType*Type::func(Type**argv,uint8_t argc){
 		string s=FuncType::NAME(this,argv,argc);
-		uint16_t b;if(BinSearch<Type*,string,cmp,uint16_t>(0,b,_funcs.count,_funcs.raw,s))return(FuncType*)_funcs[b];
-		return(FuncType*)_funcs._insert(new FuncType(s,this,argv,argc),b);
+		uint16_t b;if(BinSearch<Type*,string,cmp,uint16_t>(0,b,_funcs.count,(Type**)_funcs.raw,s))return(FuncType*)_funcs[b];
+		auto z=_funcs._insert(new FuncType(s,this,argv,argc),b);z->parent=&func_container;
+		return(FuncType*)z;
 	}
 	int cmp(Type*const&a,Type*const&b){return cmp(a->name,b->name);}
 	int cmp(Type*const&a,const string&b){return cmp(a->name,b);}

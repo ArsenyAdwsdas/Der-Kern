@@ -1,3 +1,4 @@
+#pragma once
 #include"../include/DerKern/StandloTypes.h"
 namespace DerKern{
 	int cmp(const string&a,const string&b){return a.compare(b);}

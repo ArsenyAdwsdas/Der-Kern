@@ -5,18 +5,23 @@ namespace DerKern{
 		enum class Types:uint8_t{
 			undecided=0,//non-existent
 			imovbl=1,//forever at pointer, maybe you don't want to get rid that place... just saying...
-			reg=2,dReg=reg|imovbl//register/dereferenced register
+			reg=2,dReg=reg|imovbl,//register/dereferenced register
+			ptr=4//will probably be very unusable...
 		};uint8_t type;
-		int32_t imov;//if(type==1)v=*(*)(uint32_t)imov;if(type==dReg)v=*((*)reg+imov)
-		uint8_t reg;//register
+		union{
+			int32_t imov;//if(type==1)v=*(*)(uint32_t)imov;if(type==dReg)v=*((*)reg+imov)
+			uint8_t reg;//register
+			void*ptr;
+		};
 		inline operator uint8_t(){return type&4?reg:(uint8_t)-1;}
 		inline Location(){type=0;}
 		inline Location(int32_t o){type=1;imov=o;}
 		inline Location(uint8_t r){type=2;reg=r;}
 		inline Location(uint8_t r,int32_t o){type=2;reg=r;imov=o;}
+		inline Location(void*p){type=4;ptr=p;}
 	};
 	typedef Location FLocation;
-	struct _Variable;struct Variable;struct Type;
+	struct _Variable;struct Type;
 	/*struct _Func{
 		bool mayChange[RegisterCount];
 		//bool external;//may or may not need registers from C++
@@ -46,9 +51,8 @@ namespace DerKern{
 		inline _Variable():type(0),val(){}
 		inline _Variable(Type*t,Location v):type(t),val(v){}
 	};
-	struct Variable:_Variable{
-		string name;
-		inline Variable(_Variable z,string n):name(n){*(_Variable*)this=z;}
-		inline Variable(Type*t,Location v,string n):name(n),_Variable(t,v){}
+	typedef pair<string,_Variable>Variable;inline int cmp(const Variable&a,const Variable&b){return cmp(a.a,b.a);}
+	struct VarStorage:Dicto<string,_Variable,uint16_t,16,cmp>{
+		void operator+=(Type*t);void operator+=(Type&t);
 	};
 }

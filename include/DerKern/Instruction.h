@@ -1,6 +1,7 @@
 #pragma once
 #include<stdexcept>
 #include"Type.h"
+#include"compile.h"
 namespace DerKern{
 	struct CompileState;struct EvalState;
 	namespace Instructions{
@@ -42,9 +43,10 @@ namespace DerKern{
 		};
 		
 		struct NopO:Return0{pair<Type*,Location>v;inline NopO(pair<Type*,Location>out){v=out;}void compile(CompileState&)override;void eval(EvalState&)override;}//a base instruction that "outputs" a value
+		struct NopIO:NopO{pair<Type*,Location>v;inline NopO(NopO*inp,pair<Type*,Location>out):NopO(out){in=inp;}}//a base instruction that "inputs" and "outputs" a value
 		struct Init:NopO{pair<Type*,Location>v;void compile(CompileState&)override;void eval(EvalState&)override;}//calls default constructor
 		#warning Instruction.h ain't ready for use.
-		namespace UOps{
+		/*namespace UOps{
 			struct Equ:NopO{//!
 				NopO*a;//input comes from here
 				inline Equ(NopO*in,pair<Type*,Location>out):NopO(out){a=in;}
@@ -56,13 +58,8 @@ namespace DerKern{
 				__UOp(Star)//*
 				__UOp(Dolla)__UOp(Hash)//$,#
 			#undef __UOp
-		}
-		namespace Ops{
-			struct Set:UOps::Equ{//=
-				NopO*b;//second input
-				inline Set(NopO*in,NopO*in2,pair<Type*,Location>out):Not(in,out){b=in2;}
-				void compile(CompileState&)override;void eval(EvalState&)override;
-			};
+		}*/
+		/*namespace Ops{
 			#define __Op(name) struct name:Set{inline name(NopO*in,NopO*in2,pair<Type*,Location>out):Set(in,in2,out){}void compile(CompileState&)override;void eval(EvalState&)override;};
 				__UOp(Plus)__UOp(Minus)__UOp(Mul)__UOp(Div)//+,-,*,/
 				__UOp(PlusE)__UOp(MinusE)__UOp(MulE)__UOp(DivE)//+=,-=,*=,/=
@@ -75,9 +72,9 @@ namespace DerKern{
 
 				__UOp(Or)__UOp(And)__UOp(Eq)__UOp(NEq)//||,&&,==,!=
 			#undef __Op
-		}
+		}*/
 	}
 	typedef Instructions::Return0 Instruction;
-	typedef Instructions::NopO InstructionWithOutput;
-	typedef Instructions::UOps::Equ UOpInstruction;
+	typedef Instructions::NopO InstructionWithO;
+	typedef Instructions::NopIO InstructionWithIO;
 }
