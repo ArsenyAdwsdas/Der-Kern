@@ -2,7 +2,9 @@
 #include"../include/DerKern/StandloTypes.h"
 namespace DerKern{
 	int cmp(const string&a,const string&b){return a.compare(b);}
-	int cmp(const int&a,const int&b){return a>b?1:a==b?0:-1;}
+	int cmp(const int&a,const int&b){return a>b?-1:a==b?0:1;}
+	int cmp(const uint8_t&a,const uint8_t&b){return a>b?-1:a==b?0:1;}
+	int cmp(const uint32_t&a,const uint32_t&b){return a>b?-1:a==b?0:1;}
 	namespace Allocery{
 		void*AlloLoggy::valloc(uint32_t s){return alloc(s);}
 		void*Allo2Loggy::valloc(uint32_t s){return alloc(s);}void Allo2Loggy::vfree(void*_){return free(_);}

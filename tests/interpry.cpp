@@ -1,7 +1,8 @@
 #include"../src/Encods/Ascii_CLITERAL.cpp"
 #include"../src/Type.cpp"
-#include"../src/Allocery.cpp"
+#include"../src/Values.cpp"
 using namespace DerKern;
+#error NOT READY
 /*
 ASCII::CLITERAL_result calc(ASCII::CLITERAL_result a,uint8_t op,ASCII::CLITERAL_result b){
 	if(a.type==12){
@@ -111,17 +112,13 @@ ASCII::CLITERAL_result expr(VarStorage&vars,Inputo::Universa&in){
 */
 #define numHell(a,op,b) 
 ASCII::CLITERAL_result expr(VarStorage&vars,Inputo::Universa&in){
-	auto a=ASCII::CLITERAL(in);
+	auto a=ASCII::CLITERAL(in).resolve(&vars);;
 	ASCII::spaces(in);
 	if(in.expect('=')){
 		ASCII::spaces(in);
 		assert(a.type==12);
 		auto v=vars.get(a.s);if(!v)return;
-		void*pntr=v->resolve(0);
-		switch(v->type){
-			case &Type::i64:return*(int64_t)pntr=(int64_t)expr(vars,in);
-			default:return;
-		}
+		void*pntr=
 	}
 }
 int main(){

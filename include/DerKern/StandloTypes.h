@@ -28,11 +28,31 @@
 		static void f(void) __attribute__((constructor)); \
 		static void f(void)
 #endif
+//Blame C++ standards for not allowing to use "enum class" as just "uint8_t". // https://stackoverflow.com/questions/8357240/how-to-automatically-convert-strongly-typed-enum-into-int
+//https://stackoverflow.com/a/13273876 gave me bravery to dare use "class" instead of "namespace"
+// //"I wanna make a macro for it... OH?.. I'M ALLOWED TO FORWARD-DECLARE ENUMS?.. GOOD. I'LL DO THAT." // https://stackoverflow.com/questions/71416/forward-declaring-an-enum-in-c
+//Ended up finally checking. Bye "=0"! // https://stackoverflow.com/a/34811588 (fortunately by default the first enum value has to be 0)
+//Turned out that forward declarations are useless to me here... https://stackoverflow.com/a/1021809
+//VSC sometimes shows me non-existent errors due to those... Eh, not the worst I've had. I've written lots of stuff in 1 line of Lua... Back when I was making my mods for Factorio... Like 3 years ago...
+#define ENUM(name,type) class name{name();public:enum T:type{
+#define ENUM_END };};//I do hate python syntax... But this seems to be the most readable way to use these macros... Since when do I care about it though?..
 
 //https://stackoverflow.com/questions/537303/binary-literals/538101#538101
+template<char...digits>struct conv2bin;
+template<char high, char... digits>struct conv2bin<high, digits...>{
+    static_assert(high == '0' || high == '1', "no bin num!");
+    enum z:int64_t{value=(high-'0')*(1<<sizeof...(digits))+conv2bin<digits...>::value};
+};
+template<char high>struct conv2bin<high>{
+    static_assert(high == '0' || high == '1', "no bin num!");
+    enum z:int64_t{value=(high - '0')};
+};
+template<char...digits>constexpr int64_t operator "" _b(){return conv2bin<digits...>::value;}
 
 namespace DerKern{
 	using std::string;int cmp(const string&,const string&);int cmp(const int&,const int&);
+	int cmp(const uint8_t&a,const uint8_t&b);int cmp(const uint32_t&a,const uint32_t&b);
+	template<typename A,typename B,int(*cmp)(const A&,const B&)>inline int cmpR(const A&a,const B&b){return-cmp(a,b);}//to reverse the order.
 	template<typename _A,typename _B>struct pair{
 		typedef _A A;typedef _B B;
 		union{A a;A first;};union{B b;B second;};
@@ -62,9 +82,9 @@ namespace DerKern{
 		}
 		b=a;return 0;
 	}
-	template<typename T,typename T2,int(*cmp)(const T&,const T&),typename S>inline bool BinSearch(S a,S&b,S c,const T*z,const T2&&v){return BinSearch(a,b,c,z);}
-	template<typename T,int(*cmp)(const T&,const T&),typename S>inline bool BinSearch(S a,S&b,S c,const T*z,const T&v){return BinSearch<T,T,cmp,S>(a,b,c,z,v);}
-	template<typename T,int(*cmp)(const T&,const T&),typename S>inline bool BinSearch(S a,S&b,S c,const T*z,const T&&v){return BinSearch(a,b,c,z);}
+	// template<typename T,typename T2,int(*cmp)(const T&,const T&),typename S>inline bool BinSearch(S a,S&b,S c,const T*z,const T2&&v){return BinSearch<T,T2,cmp,S>(a,b,c,z,(const T2&)v);}
+	// template<typename T,int(*cmp)(const T&,const T&),typename S>inline bool BinSearch(S a,S&b,S c,const T*z,const T&v){return BinSearch<T,T,cmp,S>(a,b,c,z,v);}
+	// template<typename T,int(*cmp)(const T&,const T&),typename S>inline bool BinSearch(S a,S&b,S c,const T*z,const T&&v){return BinSearch<T,T,cmp,S>(a,b,c,z,v);}
 
 	template<typename T>inline T*mallocCpy(T*a,size_t c){T*_=(T*)malloc(sizeof(T)*c);memcpy(_,a,sizeof(T)*c);return _;}
 
@@ -143,17 +163,17 @@ namespace DerKern{
 	template<typename T,typename sizeT,sizeT Exp,int(*_cmp)(const T&,const T&)>struct SortList:List<T,sizeT,Exp>{
 		inline SortList(){}
 		template<typename _K,typename _V,typename _sizeT,sizeT _Exp,int(*cmp)(const _K&,const _K&)>SortList(const Dicto<_K,_V,_sizeT,_Exp,cmp>&)=delete;
-		inline sizeT getI(const T&v)const{sizeT b;BinSearch<T,_cmp,sizeT>(0,b,this->count-1,this->raw,v);return b;}
+		inline sizeT getI(const T&v)const{sizeT b;BinSearch<T,T,_cmp,sizeT>(0,b,this->count-1,this->raw,v);return b;}
 		inline sizeT getI(const T&&v)const{return getI(v);}
-		template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline sizeT getI(const T2&v)const{sizeT b;BinSearch<T,T2,Cmp,sizeT>(0,b,this->count,this->raw,v);return b;}
-		template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline sizeT getI(const T2&&v)const{return getI<T2,Cmp>(v);}
+		template<typename T2,int(*Cmp)(const T&,const T2&)=cmp>inline sizeT getI(const T2&v)const{sizeT b;BinSearch<T,T2,Cmp,sizeT>(0,b,this->count,this->raw,v);return b;}
+		template<typename T2,int(*Cmp)(const T&,const T2&)=cmp>inline sizeT getI(const T2&&v)const{return getI<T2,Cmp>(v);}
 
-		inline T*get(const T&v)const{sizeT b;if(BinSearch<T,_cmp,sizeT>(0,b,this->count,this->raw,v))return&this->raw[b];return 0;}
+		inline T*get(const T&v)const{sizeT b;if(BinSearch<T,T,_cmp,sizeT>(0,b,this->count,this->raw,v))return&this->raw[b];return 0;}
 		inline T*get(const T&&v)const{return get(v);}
 		template<typename T2,int(*Cmp)(const T&,const T2&)=cmp>inline T*get(const T2&v)const{sizeT b;if(BinSearch<T,T2,Cmp,sizeT>(0,b,this->count,this->raw,v))return&this->raw[b];return 0;}
 		template<typename T2,int(*Cmp)(const T&,const T2&)=cmp>inline T*get(const T2&&v)const{return get<T2,Cmp>(v);}
 
-		inline T&set(const T&v){sizeT b;if(BinSearch<T,_cmp,sizeT>(0,b,this->count,this->raw,v))return this->raw[b]=v;return insert(v,b);}
+		inline T&set(const T&v){sizeT b;if(BinSearch<T,T,_cmp,sizeT>(0,b,this->count,this->raw,v))return this->raw[b]=v;return insert(v,b);}
 		inline T&set(const T&&v){return set(v);}
 		template<typename T2,int(*Cmp)(const T&,const T2&)=cmp>inline T&setKV(const T2&k,const T&v){sizeT b;if(BinSearch<T,T2,Cmp,sizeT>(0,b,this->count,this->raw,k))return this->raw[b]=v;return insert(v,b);}
 		//template<typename T2,int(*Cmp)(const T&,const T2&)=cmp>inline T&setKV(const T2&k,const T&&v){sizeT b;if(BinSearch<T,T2,Cmp,sizeT>(0,b,this->count,this->raw,k))return this->raw[b]=v;return insert(v,b);}
@@ -185,8 +205,8 @@ namespace DerKern{
 		inline V&set(const K&k,const V&v){sizeT b;if(BinSearch<pair<K,V>,K,cmpA2<K,V,_cmp>,sizeT>(0,b,this->count,this->raw,k))return this->raw[b].b=v;return this->_insert({k,v},b).b;}
 		inline V&set(const K&k,const V&&v){return set(k,v);}inline V&set(const K&&k,const V&v){return set(k,v);}inline V&set(const K&&k,const V&&v){return set(k,v);}
 
-		inline V*get(const K&k){sizeT b;if(BinSearch<pair<K,V>,K,cmpA2<K,V,_cmp>,sizeT>(0,b,this->count,this->raw,k))return&this->raw[b].b;return 0;}
-		inline V*get(const K&&k){return get(k);}
+		inline V*get(const K&k)const{sizeT b;if(BinSearch<pair<K,V>,K,cmpA2<K,V,_cmp>,sizeT>(0,b,this->count,this->raw,k))return&this->raw[b].b;return 0;}
+		inline V*get(const K&&k)const{return get(k);}
 
 		inline V&operator[](const K&k)const{return*get(k);}inline V&operator[](const K&&k)const{return*get(k);}
 	};

@@ -1,6 +1,6 @@
 #pragma once
 #include"../include/DerKern/Type.h"
-#include"Allocery.cpp"
+#include"Values.cpp"
 #include"Erroring.cpp"
 namespace DerKern{
 	Type Type::i8=Type("int8",1);Type Type::u8=Type("uint8",1);
@@ -11,11 +11,7 @@ namespace DerKern{
 	Type Type::str=Type("string",sizeof(int*));Type Type::_type=Type("type",sizeof(Type));
 	Type Type::VOID=Type("void",1);
 	Type Type::const_container=Type("<CONST>",0);Type Type::array_container=Type("<ARRAY>",0);
-	Type Type::func_container=Type("<FUNCTION>",FuncHead_size);
-	Type Type::idk[16];
 	namespace{INITIALIZER(init){
-		static const char _idk[]="idk0\0idk1\0idk2\0idk3\0idk4\0idk5\0idk6\0idk7\0idk8\0idk9\0idk10\0idk11\0idk12\0idk13\0idk14\0idk15";
-		for(uint8_t i=0;i<50;i+=5)Type::idk[i]=Type(_idk+i,Type::PtrSize);for(uint8_t i=45;i<81;i+=6)Type::idk[i]=Type(_idk+i,Type::PtrSize);
 		Type::VOID.size=0;
 	}}
 	Ptr1Type*Type::pointer(){
@@ -51,12 +47,6 @@ namespace DerKern{
 		uint16_t b;if(BinSearch<ArrayType*,uint32_t,cmp,uint16_t>(0,b,_arrays.count,(ArrayType**)_arrays.raw,count))return(ArrayType*)_arrays[b];
 		auto z=_arrays._insert(new ArrayType(this,count),b);z->parent=&array_container;
 		return(ArrayType*)z;
-	}
-	FuncType*Type::func(Type**argv,uint8_t argc){
-		string s=FuncType::NAME(this,argv,argc);
-		uint16_t b;if(BinSearch<Type*,string,cmp,uint16_t>(0,b,_funcs.count,(Type**)_funcs.raw,s))return(FuncType*)_funcs[b];
-		auto z=_funcs._insert(new FuncType(s,this,argv,argc),b);z->parent=&func_container;
-		return(FuncType*)z;
 	}
 	int cmp(Type*const&a,Type*const&b){return cmp(a->name,b->name);}
 	int cmp(Type*const&a,const string&b){return cmp(a->name,b);}

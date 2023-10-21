@@ -1,4 +1,4 @@
-#include"../src/StandloTypes.cpp"
+#include"../../src/StandloTypes.cpp"
 
 using namespace DerKern;
 int main(int argc, char const *argv[]){
