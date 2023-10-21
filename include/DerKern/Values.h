@@ -42,6 +42,14 @@ namespace DerKern{
 		inline Location(uint8_t r,int32_t o){type=2;reg=r;imov=o;}
 		inline Location(void*p){type=4;ptr=p;}
 		inline Location(Location*p){type=7;ptr=p;}
+		inline bool operator==(Location z)const{
+			if(type!=z.type)return 0;
+			if(type==1)return imov==z.imov;
+			if(type==2)return reg==z.reg;
+			if(type==3)return reg==z.reg&&imov==z.imov;
+			if(type==4||type==7)return ptr==z.ptr;
+			return 0;
+		}
 	};
 	typedef Location FLocation;
 	struct _Variable;struct Type;

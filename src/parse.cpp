@@ -1,5 +1,6 @@
 #pragma once
-#include"../include/DerKern/DerKern.h"
+#include"../include/DerKern/parse.h"
+#include"Environment.cpp"
 namespace DerKern{
 	void Parse(ParseResult*r,uint64_t*sCurrent,string s){
 		uint64_t _i;if(!sCurrent){_i=0;sCurrent=&_i;}

@@ -1,5 +1,11 @@
 #pragma once
-#include<stdexcept>
+#ifndef VisualStudioCode_SHUT_UP//BECAUSE IT APPARENTLY DOESN'T KNOW IT EXISTS.
+	#include<stdexcept>
+#else
+	namespace std{
+		class exception{};
+	};
+#endif
 #include"Type.h"
 //#include"compile.h"
 namespace DerKern{
@@ -44,8 +50,11 @@ namespace DerKern{
 			void eval(EvalState&)override;
 		};
 		
-		struct NopO:Return0{pair<Type*,Location>v;inline NopO(pair<Type*,Location>out):v(out){}void compile(CompileState&)override;void eval(EvalState&)override;};//a base instruction that "outputs" a value
-		struct NopIO:NopO{pair<Type*,Location>in;inline NopIO(NopO*inp,pair<Type*,Location>out):NopO(out),in(out){}};//a base instruction that "inputs" and "outputs" a value
+		struct Noth:Return0{inline Noth(){}inline Noth(int){constant=1;}void compile(CompileState&)override;void eval(EvalState&)override;};extern Noth noth;//basically does nothing.
+
+		struct NopO:Noth{pair<Type*,Location>out;inline NopO(pair<Type*,Location>ou):out(ou){}};//a base instruction that "outputs" a value
+		struct NopIO:NopO{pair<Type*,Location>in;inline NopIO(pair<Type*,Location>inp,pair<Type*,Location>out):NopO(out),in(inp){}};//a base instruction that "inputs" and "outputs" a value
+		struct NopIIO:NopIO{pair<Type*,Location>in2;inline NopIIO(pair<Type*,Location>inp,pair<Type*,Location>inp2,pair<Type*,Location>out):NopIO(inp,out),in2(inp2){}};//a base instruction that "inputs" twice and "outputs" a value
 		struct Init:NopO{pair<Type*,Location>v;void compile(CompileState&)override;void eval(EvalState&)override;};//calls default constructor
 		#warning Instruction.h ain't ready for use.
 		/*namespace UOps{
@@ -75,6 +84,11 @@ namespace DerKern{
 				__UOp(Or)__UOp(And)__UOp(Eq)__UOp(NEq)//||,&&,==,!=
 			#undef __Op
 		}*/
+		struct Add:NopIIO{// I'm trying.
+			inline Add(Type*T,Location inp2,Location inp,Location out):NopIIO({T,inp},{T,inp2},{T,out}){}
+			//void compile(CompileState&)override;
+			void eval(EvalState&)override;
+		};
 	}
 	typedef Instructions::NopO InstructionWithO;
 	typedef Instructions::NopIO InstructionWithIO;

@@ -32,6 +32,29 @@ Function*GetFunction(string name,Type**argv,uint8_t argc,const Scope*scop=0){
 	}
 	return 0;
 }
+void eval(Function&f, EvalState&e, Location ret, const Location*argv, uint8_t argc){
+	if(f.type==0){
+		bool nul[256]={0};
+		if(f.retsLoc.resolve()==ret.resolve());
+		else if(f.retsLoc.type!=0){f.retsLoc=ret;nul[255]=1;}
+		else{
+
+		}
+		for(uint8_t i=0;i<f.argc;i++){
+			if(f.argvLoc[i].resolve()==argv[i].resolve());
+			else if(f.argvLoc[i].type!=0){f.argvLoc[i]=argv[i];nul[i]=1;}
+			else{
+
+			}
+		}
+		f.inl->eval(e);
+		if(nul[255])f.retsLoc.type=0;
+		for(uint8_t i=0;i<argc;i++)if(nul[i])f.argvLoc[i].type=0;
+	}
+}
+inline void eval(Function&f,Environment*E,Location ret,const Location*argv,uint8_t argc){EvalState e(E);return eval(f,e,ret,argv,argc);}
+template<uint8_t argc>inline void eval(Function&f,EvalState&e,Location ret,const Location argv[argc]){eval(f,e,ret,argv,argc);}
+template<uint8_t argc>inline void eval(Function&f,Environment*e,Location ret,const Location argv[argc]){eval(f,e,ret,argv,argc);}
 int main(){
 	Scope scp;
 	Type*_[2]={&Type::u64,&Type::u64};
@@ -39,14 +62,16 @@ int main(){
 	scp.set("+",{&Type::overloadery,overy=new OverloadedFunction()});
 	auto op=overy->typery.set(new Function(&Type::u64,_,2,0));
 	Function*z;{z=GetFunction((string)"+",_,2,&scp);}if(!z)printf("GetFunction FAIL\n");
+	op->inl=new Instructions::Add(&Type::u64,&op->rets,&op->argvLoc[0],&op->argvLoc[1]);
 
 
-
-	printf("?..\n");if(1)return 0;
+	Environment env=Environment(0);
+	//printf("?..\n");if(1)return 0;
 	uint64_t a[]={1,2006};
-	pair<Type*,Location>ret={&Type::u64,a};
-	const pair<Type*,Location>args[2]={{&Type::u64,&a[0]},{&Type::u64,&a[1]}};
-	RegisterState regs;
-	z->eval(&regs,ret,args,2);
+	Location ret=a;
+	const Location args[2]={&a[0],&a[1]};
+	printf("?...\n");
+	eval(*z,&env,ret,args,2);
+	printf("!?...\n");
 	return 0;
 }

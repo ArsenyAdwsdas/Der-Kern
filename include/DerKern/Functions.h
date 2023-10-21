@@ -18,7 +18,7 @@ namespace DerKern{
 		static FuncType*Get(Type*ret,Type**argv,uint8_t argc);
 		static SortList<FuncType*,uint16_t,16,cmp>_funcs;
 	};
-	struct Instruction;
+	struct Instruction;struct Environment;
 	struct Function:FuncBase{
 		inline FuncType*TYPE(){return FuncType::Get(rets,argv,argc);}
 		ENUM(Types,uint8_t)
@@ -30,7 +30,7 @@ namespace DerKern{
 			Instruction*inl;//what to "paste"
 			void*ptr;//what to "call"
 		};
-		Location*argvLoc;//basically argv except it stores "Location"s
+		Location retsLoc,*argvLoc;//basically rets,argv except it stores "Location"s instead of types
 
 		//A lot of thinking is needed to figure out a good way to implement my "why save registers so much when it's not needed?" idea... Well that's the price of overthinking and being stubborn about optimizing the hell out of everything...
 		bool mayChange[sizeof(int*)<<1];//what registers may change. [4](esp)+[5](ebp) will probably mean "special esp/ebp hell"("swap sp,bp", all the actions, ret value to sp, swap again, "ret")
@@ -43,8 +43,6 @@ namespace DerKern{
 		}
 		Function(const FuncType*);//This'll have some problems. For now it can't be usable.
 
-		void eval(RegisterState*,pair<Type*,Location>ret,const pair<Type*,Location>*argv,uint8_t argc);
-		template<uint8_t argc>inline void eval(RegisterState*r,pair<Type*,Location>ret,const pair<Type*,Location>argv[argc]){eval(r,ret,argv,argc);}
 	};
 	int cmp(Function*const&a,Function*const&b);
 	int cmp(Function*const&a,FuncBase const&b);
