@@ -2,6 +2,8 @@
 #include"eval.h"
 namespace DerKern{
 	struct CompileState:EvalState{
+		inline CompileState():EvalState(){}
+		inline CompileState(Environment*env,ParseResult*orig=0):EvalState(env,orig){}
 		BBuf*b;
 		List<uint64_t>lns;//indecies of the first bytes each(except the last one) line doesn't take, do fix 'em all if manually editing "BBuf"
 		inline void ln(uint64_t i){lns.append(i);}

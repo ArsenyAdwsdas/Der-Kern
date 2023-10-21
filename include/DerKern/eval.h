@@ -3,6 +3,8 @@
 namespace DerKern{
 	struct CompileState;
 	struct EvalState{
+		inline EvalState(){}
+		inline EvalState(Environment*env,ParseResult*orig=0){e=env;origin=orig;}
 		EvalState(const CompileState&)=delete;
 		ParseResult*origin;Environment*e;
 		uint16_t i,line;//the current instruction and the current line

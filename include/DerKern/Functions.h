@@ -20,21 +20,28 @@ namespace DerKern{
 	};
 	struct Instruction;
 	struct Function:FuncBase{
+		inline FuncType*TYPE(){return FuncType::Get(rets,argv,argc);}
 		ENUM(Types,uint8_t)
 			Inline,//That's a literal Copy-Paste. Feel free to change argv[i].b
 			Call//And that's a comfy(but not really optimizable) "call" with a "ret"
 			ENUM_END
-		uint8_t type;// Types::T
+		Types::T type;
 		union{
 			Instruction*inl;//what to "paste"
 			void*ptr;//what to "call"
 		};
 		Location*argvLoc;//basically argv except it stores "Location"s
-		Function(Type*rets,Type**argv,uint8_t argc,uint8_t type=Types::T::Call);inline FuncType*TYPE(){return FuncType::Get(rets,argv,argc);}
-		Function(const FuncType*);//This'll have some problems. For now it can't be usable.
 
 		//A lot of thinking is needed to figure out a good way to implement my "why save registers so much when it's not needed?" idea... Well that's the price of overthinking and being stubborn about optimizing the hell out of everything...
 		bool mayChange[sizeof(int*)<<1];//what registers may change. [4](esp)+[5](ebp) will probably mean "special esp/ebp hell"("swap sp,bp", all the actions, ret value to sp, swap again, "ret")
+
+		inline Function(Type*rets,Type**argv,uint8_t argc,Types::T t=Types::Call):FuncBase(rets,argv,argc){
+			type=t;
+			argvLoc=(Location*)malloc(sizeof(Location)*argc);
+			for(uint8_t i=0;i<argc;i++)argvLoc[i]=Location();
+			for(uint8_t i=0;i<sizeof(int*)<<1;i++)mayChange[i]=0;
+		}
+		Function(const FuncType*);//This'll have some problems. For now it can't be usable.
 
 		void eval(RegisterState*,pair<Type*,Location>ret,const pair<Type*,Location>*argv,uint8_t argc);
 		template<uint8_t argc>inline void eval(RegisterState*r,pair<Type*,Location>ret,const pair<Type*,Location>argv[argc]){eval(r,ret,argv,argc);}

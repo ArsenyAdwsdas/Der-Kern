@@ -1,16 +1,19 @@
+#pragma once
+#include"../Instruction.cpp"
 #include"../../include/DerKern/platformie/x86.h"
+#include"../compile.cpp"
+void DerKern::Instruction::compile(CompileState&s){s.b+=0xC3;}
 namespace DerKern::Instructions{
-	void Return0::compile(CompileState&s){s.b+=0xC3;}
 	void Return1::compile(CompileState&s){bef->compile(s);(*s.b)+=0xC3;}
 	void Pong::compile(CompileState&s){fprintf(stderr,"!!!pong is NOT complete!!!\n");throw std::exception();}
 	void jmpLine::compile(CompileState&s){fprintf(stderr,"!!!jmpLine is NOT complete!!!\n");throw std::exception();}
 	namespace x86_64{
 		inline bool op1rm(uint8_t op,BBuf*b,uint8_t to,Location f,uint8_t s){//https://defuse.ca/online-x86-assembler.htm
-			if(f.type!=0||Registers.count<=to||Registers.count<=f.reg)return 0;
+			if(f.type!=0||Register::count<=to||Register::count<=f.reg)return 0;
 			uint8_t z[10];
 			if(s==2)b->append(0x66);
 			if(to>7||(f.type!=1&&f.reg>7)||s==8)b->append(0x40|(f.type==1?(to>7)*4:(to>7)|((f.reg>7)*4))|(s&8));
-			z[0]=opcode|(s>1);
+			z[0]=op|(s>1);
 			if(f.type==3){
 				if(f.imov!=0||f.reg&7==5){
 					if(~0xff&(uint32_t)f.imov){
@@ -29,7 +32,7 @@ namespace DerKern::Instructions{
 				}else{
 					z[1]=(to&7)|((f.reg&7)<<3);
 					if(f.reg&7==4){
-						z[2]=0x24
+						z[2]=0x24;
 						b->append(z,3);
 					}else b->append(z,2);
 				}
@@ -45,7 +48,7 @@ namespace DerKern::Instructions{
 			return 1;
 		}
 		inline bool op1rm32(uint8_t op1,uint8_t op2,uint8_t op3,uint8_t op4,BBuf*b,uint8_t to,Location f,uint8_t s){//adcx,adox
-			if(f.type!=0||Registers.count<=to||Registers.count<=f.reg||(s!=4&&(sizeof(int*)==4||s!=8)))return 0;
+			if(f.type!=0||Register::count<=to||Register::count<=f.reg||(s!=4&&(sizeof(int*)==4||s!=8)))return 0;
 			uint8_t z[10];
 			z[0]=op1;
 			if(s==8||(f.type!=1&&f.reg>7)||to>7){
@@ -72,7 +75,7 @@ namespace DerKern::Instructions{
 				}else{
 					if(f.reg&7==4){
 						z[0]=(to&7)|((f.reg&7)<<3);
-						z[1]=0x24
+						z[1]=0x24;
 						b->append(z,2);
 					}else b->append((to&7)|((f.reg&7)<<3));
 				}
@@ -87,7 +90,7 @@ namespace DerKern::Instructions{
 			return 1;
 		}
 		inline bool op1rvm(uint8_t op,BBuf*b,uint8_t to,uint8_t f1,Location f2,uint8_t siz){//andn,bextr
-			if(Registers.count<=to||Registers.count<=f1||f2.type!=0||Registers.count<=f2.reg||(s!=4&&(sizeof(int*)==4||s!=8)))return 0;
+			if(Register::count<=to||Register::count<=f1||f2.type!=0||Register::count<=f2.reg||(siz!=4&&(sizeof(int*)==4||siz!=8)))return 0;
 			uint8_t z[10];
 			z[0]=0xc4;
 			z[1]=0xe2-((to&8)<<4)-(((f2.type&2)&&(f2.reg&8))*0x20);
@@ -111,7 +114,7 @@ namespace DerKern::Instructions{
 				}else{
 					if(f2.reg&7==4){
 						z[4]=(to&7)|((f2.reg&7)<<3);
-						z[5]=0x24
+						z[5]=0x24;
 						b->append(z,6);
 					}else{
 						z[4]=(to&7)|((f2.reg&7)<<3);
@@ -137,7 +140,7 @@ namespace DerKern::Instructions{
 			b->append(op|(s>1?(s2==1)*2+1:0));
 			if(to.type==5){
 				if(to.imov>0||to.reg&7==5){
-					if(~0xff&(uint32_t)f2.imov){
+					if(~0xff&(uint32_t)to.imov){
 						b->append(to.reg|op2|0x80);
 						b->append((uint8_t*)&to.imov,4);
 					}else{
@@ -160,14 +163,14 @@ namespace DerKern::Instructions{
 			return 1;
 		}
 		inline bool op1vm(uint8_t op2,BBuf*b,uint8_t to,Location f,uint8_t siz){//blsi
-			if(!validR(to)||!validL(f2)||!validS(siz))return 0;
+			if(to>=Register::count||!validL(f)||!validS(siz))return 0;
 			uint8_t z[10];
 			z[0]=0xc4;
 			z[1]=0xe2-(((f.type&2)&&(f.reg&8))*0x20);
 			z[2]=(0x78-(to<<3))|((siz&8)<<4);
 			z[3]=0xf3;
 			if(f.type==3){
-				if(f2.imov>0||f.reg&7==5){
+				if(f.imov>0||f.reg&7==5){
 					if(~0xff&(uint32_t)f.imov){
 						z[4]=op2|((f.reg&7)<<3)|0x80;
 						if(f.reg&7==4){
@@ -182,9 +185,9 @@ namespace DerKern::Instructions{
 						}else{z[5]=(uint8_t)f.imov;b->append(z,6);}
 					}
 				}else{
-					if(f2.reg&7==4){
+					if(f.reg&7==4){
 						z[4]=op2|((f.reg&7)<<3);
-						z[5]=0x24
+						z[5]=0x24;
 						b->append(z,6);
 					}else{
 						z[4]=op2|((f.reg&7)<<3);
@@ -204,23 +207,23 @@ namespace DerKern::Instructions{
 		}
 		bool adc(BBuf*b,Location to,Location f,uint8_t s){
 			constexpr uint8_t opc=16;
-			if(to.type==2&&f.type!=0)return op1rm(opc|2,b,to,f,s);
-			if((to.type&1)&&f.type==2)return op1rm(opc,b,f,to,s);
+			if(to.type==2&&f.type!=0)return op1rm(opc|2,b,to.reg,f,s);
+			if((to.type&1)&&f.type==2)return op1rm(opc,b,f.reg,to,s);
 		}bool adc(BBuf*b,Location to,uint32_t v,uint8_t s){constexpr uint8_t opc=16;return to.type!=0&&((to.type==2&&to.reg==0&&(s==1||(v&~0xff)!=0))?op1i(4|opc,b,v,s):op1mi(0x80,opc,b,to,v,s));}
 		bool adcx(BBuf*b,uint8_t to,Location f,uint8_t s){return op1rm32(0x66,15,0x38,0xf6,b,to,f,s);}
-		bool add(BBuf*,Location to,Location f,uint8_t s){
+		bool add(BBuf*b,Location to,Location f,uint8_t s){
 			constexpr uint8_t opc=0;
-			if(to.type==2&&f.type!=0)return op1rm(opc|2,b,to,f,s);
-			if((to.type&1)&&f.type==2)return op1rm(opc,b,f,to,s);
+			if(to.type==2&&f.type!=0)return op1rm(opc|2,b,to.reg,f,s);
+			if((to.type&1)&&f.type==2)return op1rm(opc,b,f.reg,to,s);
 		}bool add(BBuf*b,Location to,uint32_t v,uint8_t s){constexpr uint8_t opc=0;return to.type!=0&&((to.type==2&&to.reg==0&&(s==1||(v&~0xff)!=0))?op1i(4|opc,b,v,s):op1mi(0x80,opc,b,to,v,s));}
 
 		bool adox(BBuf*b,uint8_t to,Location f,uint8_t s){return op1rm32(0xf3,15,0x38,0xf6,b,to,f,s);}
 
-		bool and(BBuf*,Location to,Location f,uint8_t s){
+		bool And(BBuf*b,Location to,Location f,uint8_t s){
 			constexpr uint8_t opc=32;
-			if(to.type==2&&f.type!=0)return op1rm(opc|2,b,to,f,s);
-			if((to.type&1)&&f.type==2)return op1rm(opc,b,f,to,s);
-		}bool and(BBuf*b,Location to,uint32_t v,uint8_t s){constexpr uint8_t opc=32;return to.type!=0&&((to.type==2&&to.reg==0&&(s==1||(v&~0xff)!=0))?op1i(4|opc,b,v,s):op1mi(0x80,opc,b,to,v,s));}
+			if(to.type==2&&f.type!=0)return op1rm(opc|2,b,to.reg,f,s);
+			if((to.type&1)&&f.type==2)return op1rm(opc,b,f.reg,to,s);
+		}bool And(BBuf*b,Location to,uint32_t v,uint8_t s){constexpr uint8_t opc=32;return to.type!=0&&((to.type==2&&to.reg==0&&(s==1||(v&~0xff)!=0))?op1i(4|opc,b,v,s):op1mi(0x80,opc,b,to,v,s));}
 		bool andn(BBuf*b,uint8_t to,uint8_t f1,Location f2,uint8_t s){return op1rvm(0xf2,b,to,f1,f2,s);}
 		bool bextr(BBuf*b,uint8_t to,Location f2,uint8_t f1,uint8_t s){return op1rvm(0xf7,b,to,f1,f2,s);}
 		bool blsi(BBuf*b,uint8_t to,Location f,uint8_t s){return op1vm(24,b,to,f,s);}

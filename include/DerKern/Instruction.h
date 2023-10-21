@@ -1,19 +1,21 @@
 #pragma once
 #include<stdexcept>
 #include"Type.h"
-#include"compile.h"
+//#include"compile.h"
 namespace DerKern{
 	struct CompileState;struct EvalState;
+	struct Instruction{
+		bool constant=0;//if 1 then don't even think of destroying it.
+		inline Instruction(int){constant=1;}
+		inline Instruction(){}
+		//static constexpr Return0*Error=(Return0*)(uint64_t)-1;	//Я БЫ С РАДОСТЬЮ, НО НЕ ПОЗВОЛЯЮТ.
+		virtual void compile(CompileState&);
+		virtual void eval(EvalState&);
+		virtual~Instruction();
+	};
 	namespace Instructions{
-		struct Return0{
-			bool constant=0;//if 1 then don't even think of destroying it.
-			inline Return0(int){constant=1;}
-			inline Return0(){}
-			//static constexpr Return0*Error=(Return0*)(uint64_t)-1;	//Я БЫ С РАДОСТЬЮ, НО НЕ ПОЗВОЛЯЮТ.
-			virtual void compile(CompileState&);
-			virtual void eval(EvalState&);
-			virtual~Return0();
-		};extern Return0 ret0;
+		typedef Instruction Return0;
+		extern Return0 ret0;
 		struct Return1:Return0{
 			Return0*bef;
 			inline Return1(Return0*b){bef=b;}
@@ -37,14 +39,14 @@ namespace DerKern{
 		struct Paste;
 		struct SpawnVar:Return0{
 			Variable v;
-			inline SpawnVar(string n,Location v,Type*t):v({t,v},n){}
+			inline SpawnVar(string n,Location v,Type*t):v(n,{t,v}){}
 			void compile(CompileState&)override;
 			void eval(EvalState&)override;
 		};
 		
-		struct NopO:Return0{pair<Type*,Location>v;inline NopO(pair<Type*,Location>out){v=out;}void compile(CompileState&)override;void eval(EvalState&)override;}//a base instruction that "outputs" a value
-		struct NopIO:NopO{pair<Type*,Location>v;inline NopO(NopO*inp,pair<Type*,Location>out):NopO(out){in=inp;}}//a base instruction that "inputs" and "outputs" a value
-		struct Init:NopO{pair<Type*,Location>v;void compile(CompileState&)override;void eval(EvalState&)override;}//calls default constructor
+		struct NopO:Return0{pair<Type*,Location>v;inline NopO(pair<Type*,Location>out):v(out){}void compile(CompileState&)override;void eval(EvalState&)override;};//a base instruction that "outputs" a value
+		struct NopIO:NopO{pair<Type*,Location>in;inline NopIO(NopO*inp,pair<Type*,Location>out):NopO(out),in(out){}};//a base instruction that "inputs" and "outputs" a value
+		struct Init:NopO{pair<Type*,Location>v;void compile(CompileState&)override;void eval(EvalState&)override;};//calls default constructor
 		#warning Instruction.h ain't ready for use.
 		/*namespace UOps{
 			struct Equ:NopO{//!
@@ -74,7 +76,6 @@ namespace DerKern{
 			#undef __Op
 		}*/
 	}
-	typedef Instructions::Return0 Instruction;
 	typedef Instructions::NopO InstructionWithO;
 	typedef Instructions::NopIO InstructionWithIO;
 }

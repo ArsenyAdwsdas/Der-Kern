@@ -1,8 +1,10 @@
-#include"../include/DerKern/DerKern.h"
+#pragma once
+#include"../include/DerKern/compile.h"
+#include"eval.cpp"
 namespace DerKern{
-	void DerKern::ParseResult::compile(BBuf*b,Environment*e){
-		BBuf _b;if(!b)b=&_b;
-		CompileState c;c.origin=this;c.b=b;c.e=e;c.line=0;
+	void DerKern::ParseResult::compile(CompileState&st){
+		BBuf _b;if(!st.b)st.b=&_b;
+		CompileState c;c.origin=this;c.b=st.b;c.e=st.e;c.line=0;
 		/*for(uint16_t i=0;i<lns[0];i++)ins[i]->compile(c);
 		c.ln(b->count);c.line++;
 		while(lns.count>c.line){

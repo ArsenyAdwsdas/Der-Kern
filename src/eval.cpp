@@ -1,4 +1,6 @@
+#pragma once
 #include"../include/DerKern/eval.h"
+#include"parse.cpp"
 namespace DerKern{
 	void ParseResult::eval(Environment*e){
 		EvalState s;s.origin=this;s.e=e;s.line=0;eval(&s);s.post();

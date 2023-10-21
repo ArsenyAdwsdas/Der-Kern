@@ -18,14 +18,14 @@ namespace DerKern{
 			array,func,
 			IDK,//Is one hell of a problem. The real type is (Type*)IDK.location.eval()
 			ENUM_END
-		uint8_t typeID;//would've written IDs except then I'm not allowed to just do =0...
+		IDs::T typeID;//would've written  except then I'm not allowed to just do =0...
 		bool isFinal;//1 means *, &, &&, [] aren't allowed
 		Type*parent;string name;uint32_t size;
 		inline Type(string n,uint32_t s){typeID=0;name=n;size=s;isFinal=0;parent=0;}
 		inline Type(Type*p,string n,uint32_t extraSize=0){typeID=0;name=n;size=p->size+extraSize;isFinal=0;parent=0;}
 		inline Type():Type("???",0){typeID=0;}
-		Dicto<string,_Variable,uint16_t,8,&cmp>Statics;inline _Variable*Static(string n)const{auto z=Statics.get(n);if(z)return z;return parent->Static(n);}
-		Dicto<string,uint32_t,uint16_t,8,&cmp>	Membas;inline 	uint32_t*Memba(string n)const{auto z=Membas.get(n);if(z)return z;return parent->Memba(n);}//u32 is basically MemberOffsetFrom0AtThis
+		Dicto<string,_Variable,uint16_t,8,&cmp>Statics;inline _Variable*Static(string n)const{auto z=Statics.get(n);if(z)return z;return parent?parent->Static(n):0;}
+		Dicto<string,uint32_t,uint16_t,8,&cmp>	Membas;inline 	uint32_t*Memba(string n)const{auto z=Membas.get(n);if(z)return z;return parent?parent->Memba(n):0;}//u32 is basically MemberOffsetFrom0AtThis
 		ENUM(UOps,uint8_t)
 			Equ,//=
 			Negate,Plusate,//-,+

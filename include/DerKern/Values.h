@@ -11,13 +11,13 @@ namespace DerKern{
 		template<typename t>inline regT&operator[](t z){return raw[z];}
 	};
 	struct Location{
-		enum class Types:uint8_t{
+		ENUM(Types,uint8_t)
 			undecided=0,//non-existent
 			imovbl=1,//forever at pointer, maybe you don't want to get rid that place... just saying...
 			reg=2,dReg=reg|imovbl,//register/dereferenced register
 			ptr=4,//will probably be mostly very unusable...
 			ref=ptr|dReg//will act as *(Location*)ptr
-		};uint8_t type;
+			ENUM_END uint8_t type;
 		union{
 			int32_t imov;//if(type==1)v=*(*)(uint32_t)imov;if(type==dReg)v=*((*)reg+imov)
 			uint8_t reg;//register

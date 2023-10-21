@@ -34,7 +34,7 @@
 //Ended up finally checking. Bye "=0"! // https://stackoverflow.com/a/34811588 (fortunately by default the first enum value has to be 0)
 //Turned out that forward declarations are useless to me here... https://stackoverflow.com/a/1021809
 //VSC sometimes shows me non-existent errors due to those... Eh, not the worst I've had. I've written lots of stuff in 1 line of Lua... Back when I was making my mods for Factorio... Like 3 years ago...
-#define ENUM(name,type) class name{name();public:enum T:type{
+#define ENUM(name,type) class name{name();public:typedef type T;enum _:type{
 #define ENUM_END };};//I do hate python syntax... But this seems to be the most readable way to use these macros... Since when do I care about it though?..
 
 //https://stackoverflow.com/questions/537303/binary-literals/538101#538101
@@ -58,7 +58,7 @@ namespace DerKern{
 		union{A a;A first;};union{B b;B second;};
 		inline pair():a(),b(){}
 		inline pair(A _a=A(),B _b=B()):a(_a),b(_b){}
-		inline pair(const pair&p):a(p.a),b(p.b){}
+		inline pair(const pair&p):a(p.a),b(p.b){}inline pair(const pair&&p):pair(p){}
 		inline pair&operator=(const pair&p){a=p.a;b=p.b;return*this;}
 		inline ~pair(){a.~A();b.~B();}
 	};
