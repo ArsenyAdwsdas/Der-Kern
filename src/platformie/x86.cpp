@@ -4,6 +4,10 @@
 #include"../compile.cpp"
 bool DerKern::Instruction::compile(CompileState&s){(*s.b)+=0xC3;return 1;}
 namespace DerKern::Instructions{
+	#ifdef VisualStudioCode_SHUT_UP//BECAUSE IT APPARENTLY THINKS THAT std::FILE* CAN'T BE CONVERTED TO FILE*
+		#undef stderr
+		#define stderr (FILE*)0
+	#endif
 	bool Return1::compile(CompileState&s){bef->compile(s);(*s.b)+=0xC3;return 1;}
 	bool Pong::compile(CompileState&s){fprintf(stderr,"!!!pong is NOT complete!!!\n");throw std::exception();return 0;}
 	bool jmpLine::compile(CompileState&s){fprintf(stderr,"!!!jmpLine is NOT complete!!!\n");throw std::exception();return 0;}
