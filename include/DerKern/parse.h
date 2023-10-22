@@ -2,7 +2,7 @@
 #include"Instruction.h"
 #include"Environment.h"
 namespace DerKern{
-	struct CompileState;struct EvalState;
+	struct CompileState;
 	struct ParseResult{//AKA Scope?
 		List<Instruction*>ins;inline void operator+=(Instruction*i){ins.append(i);}
 		List<uint16_t>lns;inline void ln(){lns.append(ins.count);}
@@ -10,16 +10,15 @@ namespace DerKern{
 		Allocery::Linear extra;
 		inline ParseResult(){}
 		
-		void eval(Environment*);
+		void DoubleQuote_eval_DoubleQuote(Environment*);//it's basically "compile, run what you just compiled, throw away what you just compiled." because I ended up erasing "eval".
+		inline void eval(Environment*e){DoubleQuote_eval_DoubleQuote(e);}
 		void compile(CompileState&);
-		void eval(EvalState*);
 		void death();
 	};
 	namespace Instructions{struct Paste:Instruction{
 		ParseResult r;
 		inline Paste(ParseResult z){/*type=2;*/r=z;}
-		void compile(CompileState&)override;
-		void eval(EvalState&)override;
+		bool compile(CompileState&)override;
 		~Paste()override;
 	};}
 	void Parse(ParseResult*r,uint64_t*sCurrent,string s);

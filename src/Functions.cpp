@@ -1,6 +1,7 @@
 #pragma once
-#include"Type.cpp"
 #include"../include/DerKern/Functions.h"
+#include"Type.cpp"
+#include"compile.cpp"
 namespace DerKern{
 	Type Type::func_container=Type("<FUNCTION>",sizeof(Function));Type Type::overloadery=Type("overloadery",sizeof(OverloadedFunction));
 	SortList<FuncType*,uint16_t,16,cmp>FuncType::_funcs;
@@ -24,4 +25,15 @@ namespace DerKern{
 	int cmp(Function*const&a,Function*const&b){return cmp((const FuncBase&)*a,(const FuncBase&)*b);}
 	int cmp(Function*const&a,FuncBase const&b){return cmp((const FuncBase&)*a,b);}
 	int cmp(Function*const&a,FuncArgs const&b){return cmp((const FuncArgs&)*a,b);}
+	bool Function::compile(CompileState&s,Location rv,const Location*av,uint8_t ac){
+		retLoc=rv;
+		for(uint8_t i=0;i<argc;i++){
+			argvLoc[i]=av[i];
+		}
+		if(type==0)return inl->compile(s);
+		retLoc=Location();
+		for(uint8_t i=0;i<argc;i++){
+			argvLoc[i].type=0;
+		}
+	}
 }

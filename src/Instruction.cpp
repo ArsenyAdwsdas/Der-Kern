@@ -1,19 +1,18 @@
 #pragma once
 #include"../include/DerKern/platformie/x86.h"
 #include"platformie/x86.cpp"
-DerKern::Instruction::~Instruction(){}void DerKern::Instruction::eval(EvalState&s){s.i=s.origin->ins.count;}
+DerKern::Instruction::~Instruction(){}
 namespace DerKern::Instructions{
 	Instruction ret0{1};
 	Pong pong{1};
 	Noth noth{1};
+	TransitionTo transitTo{1};
+	TransitionFrom transitFrom{1};
+
 	Return1::~Return1(){bef->~Return0();free(bef);}
-	void Return1::eval(EvalState&s){s.i=s.origin->ins.count;}
 
-
-	void Pong::eval(EvalState&s){printf("pong at %hu\n",s.line+1);}
-	void jmpLine::eval(EvalState&s){s.line+=lineOffset;s.i=s.origin->lns[s.line-1]-1;}
-	void Noth::compile(CompileState&s){}void Noth::eval(EvalState&s){}
-	void Add::eval(EvalState&s){
+	bool Noth::compile(CompileState&s){return 1;}
+	/*void Add::eval(EvalState&s){
 		if(
 			(
 				in.a!=&Type::u8&&in.a!=&Type::i8&&in.a!=&Type::u16&&in.a!=&Type::i16
@@ -51,5 +50,5 @@ namespace DerKern::Instructions{
 			uint8_t&f=s.e->flags;
 			f=(f&~23)|bool(a>c||b>c)|((c^(a&0x8000))?2:0)|((c&0x8000)?4:0)|(c?0:16);
 		}
-	}
+	}*/
 }

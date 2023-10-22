@@ -25,10 +25,10 @@ namespace DerKern{
 		free(ins.raw);ins.size=ins.count=0;
 		lns.death();
 	}
-	void Instructions::Paste::compile(CompileState&s){
+	bool Instructions::Paste::compile(CompileState&s){
 		throw std::exception();//It's not ready.
 		//r.compile(CompileState{s.e,s.origin,s.b});
+		return 0;
 	}
-	void Instructions::Paste::eval(EvalState&s){r.eval(s.e);}
 	Instructions::Paste::~Paste(){r.death();}
 }

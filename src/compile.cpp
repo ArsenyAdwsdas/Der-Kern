@@ -1,6 +1,6 @@
 #pragma once
 #include"../include/DerKern/compile.h"
-#include"eval.cpp"
+#include"parse.cpp"
 namespace DerKern{
 	void DerKern::ParseResult::compile(CompileState&st){
 		BBuf _b;if(!st.b)st.b=&_b;
@@ -21,4 +21,12 @@ namespace DerKern{
 	void DerKern::CompileState::post(){
 		for(uint16_t i=0;i<posts.count;i++)posts[i].second(posts[i].first);
 	}
+}
+#include<windows.h>
+DerKern::CompileResult DerKern::CompileState::toExec(){
+	DWORD dummy;
+	auto _=VirtualAlloc(0, b->size, MEM_COMMIT, PAGE_READWRITE);
+	memcpy(_,b->raw,b->size);
+	if(!VirtualProtect(_, b->size, PAGE_EXECUTE_READWRITE, &dummy))printf("FAIL\n");
+	return (CompileResult)_;
 }

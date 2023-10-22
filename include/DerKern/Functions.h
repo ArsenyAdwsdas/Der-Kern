@@ -1,5 +1,6 @@
 #pragma once
 #include"Type.h"
+#include"compile.h"
 namespace DerKern{
 	struct FuncArgs{Type**argv;uint8_t argc;inline FuncArgs(Type**a,uint8_t ac){argv=a;argc=ac;}};int cmp(const FuncArgs&,const FuncArgs&);
 	struct FuncBase:FuncArgs{Type*rets;inline FuncBase(Type*r,Type**argv,uint8_t argc):FuncArgs(argv,argc){rets=r;}};int cmp(const FuncBase&,const FuncBase&);
@@ -18,9 +19,9 @@ namespace DerKern{
 		static FuncType*Get(Type*ret,Type**argv,uint8_t argc);
 		static SortList<FuncType*,uint16_t,16,cmp>_funcs;
 	};
-	struct Instruction;struct Environment;
+	struct Instruction;struct CompileState;
 	struct Function:FuncBase{
-		inline FuncType*TYPE(){return FuncType::Get(rets,argv,argc);}
+		inline FuncType*TYPE()const{return FuncType::Get(rets,argv,argc);}
 		ENUM(Types,uint8_t)
 			Inline,//That's a literal Copy-Paste. Feel free to change argv[i].b
 			Call//And that's a comfy(but not really optimizable) "call" with a "ret"
@@ -30,7 +31,7 @@ namespace DerKern{
 			Instruction*inl;//what to "paste"
 			void*ptr;//what to "call"
 		};
-		Location retsLoc,*argvLoc;//basically rets,argv except it stores "Location"s instead of types
+		Location retLoc,*argvLoc;//basically rets,argv except it stores "Location"s instead of types
 
 		//A lot of thinking is needed to figure out a good way to implement my "why save registers so much when it's not needed?" idea... Well that's the price of overthinking and being stubborn about optimizing the hell out of everything...
 		bool mayChange[sizeof(int*)<<1];//what registers may change. [4](esp)+[5](ebp) will probably mean "special esp/ebp hell"("swap sp,bp", all the actions, ret value to sp, swap again, "ret")
@@ -42,7 +43,7 @@ namespace DerKern{
 			for(uint8_t i=0;i<sizeof(int*)<<1;i++)mayChange[i]=0;
 		}
 		Function(const FuncType*);//This'll have some problems. For now it can't be usable.
-
+		bool compile(CompileState&,Location ret,const Location*argv,uint8_t argc);
 	};
 	int cmp(Function*const&a,Function*const&b);
 	int cmp(Function*const&a,FuncBase const&b);

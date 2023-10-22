@@ -19,8 +19,10 @@ namespace DerKern{
 			ref=ptr|dReg//will act as *(Location*)ptr
 			ENUM_END uint8_t type;
 		union{
-			int32_t imov;//if(type==1)v=*(*)(uint32_t)imov;if(type==dReg)v=*((*)reg+imov)
-			uint8_t reg;//register
+			struct{
+				int32_t imov;//if(type==1)v=*(*)(uint32_t)imov;if(type==dReg)v=*((*)reg+imov)
+				uint8_t reg;//register
+			};
 			void*ptr;
 		};
 		inline Location&resolve(){auto _=this;while(_->type==7)_=(Location*)_->ptr;return*_;}
@@ -39,7 +41,7 @@ namespace DerKern{
 		inline Location(){type=0;}
 		inline Location(int32_t o){type=1;imov=o;}
 		inline Location(uint8_t r){type=2;reg=r;}
-		inline Location(uint8_t r,int32_t o){type=2;reg=r;imov=o;}
+		inline Location(uint8_t r,int32_t o){type=3;reg=r;imov=o;}
 		inline Location(void*p){type=4;ptr=p;}
 		inline Location(Location*p){type=7;ptr=p;}
 		inline bool operator==(Location z)const{
@@ -50,6 +52,12 @@ namespace DerKern{
 			if(type==4||type==7)return ptr==z.ptr;
 			return 0;
 		}
+		// inline Location&operator=(const Location z){
+		// 	type=z.type;
+		// 	imov=z.imov;
+		// 	reg=z.reg;
+		// 	ptr=z.ptr;
+		// }
 	};
 	typedef Location FLocation;
 	struct _Variable;struct Type;
@@ -76,9 +84,9 @@ namespace DerKern{
 	
 	struct _Variable{
 		Type*type;
-		union{
+		//union{
 			Location val;
-		};
+		//};
 		inline _Variable():type(0),val(){}
 		inline _Variable(Type*t,Location v=Location()):type(t),val(v){}
 	};
