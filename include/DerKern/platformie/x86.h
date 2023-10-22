@@ -47,6 +47,8 @@ namespace DerKern{
 			bool add(CompileState&,Location to,Location f,uint8_t siz);
 			bool addI(CompileState&,Location to,int32_t v,uint8_t siz);
 
+			bool call(CompileState&,Location);
+
 			bool mov(CompileState&,Location to,Location f,uint8_t siz);
 
 			bool pop(CompileState&,Location v,uint8_t siz);

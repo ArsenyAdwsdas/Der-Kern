@@ -97,6 +97,7 @@ namespace DerKern{
 			inline Add(Location ou,Location inp,Location inp2,uint8_t s):out(ou),in(inp),in2(inp2){siz=s;}
 			bool compile(CompileState&)override;
 		};
+		bool _call(CompileState&,void*);
 	}
 	typedef Instructions::NopO InstructionWithO;
 	typedef Instructions::NopIO InstructionWithIO;

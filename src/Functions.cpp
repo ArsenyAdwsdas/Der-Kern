@@ -26,14 +26,21 @@ namespace DerKern{
 	int cmp(Function*const&a,FuncBase const&b){return cmp((const FuncBase&)*a,b);}
 	int cmp(Function*const&a,FuncArgs const&b){return cmp((const FuncArgs&)*a,b);}
 	bool Function::compile(CompileState&s,Location rv,const Location*av,uint8_t ac){
-		retLoc=rv;
+		bool nul[256]={0};
+		if(!retLoc.type){retLoc=rv;nul[255]=1;}
 		for(uint8_t i=0;i<argc;i++){
-			argvLoc[i]=av[i];
+			if(!argvLoc[i]&&!av[i])return 0;
+			else if(argvLoc[i]==av[i].resolve());
+			else if(!argvLoc[i].type){argvLoc[i]=av[i].resolve();nul[i]=1;}
+			else throw std::exception();//Not ready.
 		}
-		if(type==0)return inl->compile(s);
-		retLoc=Location();
+		if(type==0){if(!inl->compile(s))return 0;}
+		//else if(type==1){if(!Instruction::_call(s,ptr))return 0;}
+
+		if(nul[255])retLoc.type=0;
 		for(uint8_t i=0;i<argc;i++){
-			argvLoc[i].type=0;
+			if(nul[i])argvLoc[i].type=0;
 		}
+		return 1;
 	}
 }

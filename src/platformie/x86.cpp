@@ -243,6 +243,26 @@ namespace DerKern::Instructions{
 			return to.type!=0&&((to.type==2&&to.reg==0&&(s==1||(v&~0xff)!=0))?op1i(4|opc,c.b,v,s):op1mi(0x80,opc,c.b,to,v,s));
 		}
 
+		bool call(CompileState&c,Location l){
+			if(l.type==0)return 0;
+			if(l.type==1){(*c.b)+=0xe8;c.b->append((uint8_t*)&l.imov,4);}//Here's the thing... It's relative...
+			if(l.type==2){
+				if(l.reg>7)(*c.b)+=0x41;
+				c.b->ensure(2);
+				c.b->raw[c.b->count]=0xff;
+				c.b->raw[c.b->count+1]=0xd0+(l.reg&7);
+				c.b->count++;
+				return 1;
+			}else if(l.type==2){//I feel like I'll have a hard time with it...
+				if(l.reg>7)(*c.b)+=0x41;
+				c.b->ensure(2);
+				c.b->raw[c.b->count]=0xff;
+				c.b->raw[c.b->count+1]=0xd0+(l.reg&7);
+				c.b->count++;
+				return 1;
+			}
+		}
+
 		bool mov(CompileState&c,Location to,Location f,uint8_t s){
 			if(to==f&&!(s==4&&(sizeof(int*)==4||to.type==2)))return 1;
 			constexpr uint8_t opc=0x88;
@@ -327,5 +347,18 @@ namespace DerKern::Instructions{
 
 		(*c.b)+=0xC3;//ret
 		return 1;
+	}
+	bool _call(CompileState&s,void*f){
+		using namespace x86_64;
+
+		//Thanks https://stackoverflow.com/a/5273354
+		#if UINTPTR_MAX == 0xffffffff//Now what registers may change there?..
+
+		#elif _WIN64//TODO: mark 0-2 and 8-11 registers as unknown.
+			
+		#else//TODO: mark 0-3 and 6-11 registers as unknown.
+
+		#endif
+		return call(s,f);
 	}
 }

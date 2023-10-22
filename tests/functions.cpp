@@ -42,7 +42,6 @@ int main(){
 
 
 	Environment env=Environment(0);
-	//printf("?..\n");if(1)return 0;
 	uint16_t a[]={1,2006};
 	Location ret=a;
 	const Location args[2]={(uint8_t)0,(uint8_t)1};env.regs[0]=1;env.regs[1]=2006;//{&a[0],&a[1]};
@@ -57,6 +56,7 @@ int main(){
 	printf("Instructions: ");for(uint32_t i=0;i<buf.count;i++)printf("%.2x",buf[i]);printf("\n");
 
 	RegisterState inpRegisters=env.regs;
+	com.toExec()(env.regs.raw);
 	com.toExec()(env.regs.raw);
 	printf("State:\n");
 	for(uint8_t i=0;i<(sizeof(int*)<<1);i++)printf("  r%.2d: %p -> %p\n",(int)i,inpRegisters[i],env.regs[i]);

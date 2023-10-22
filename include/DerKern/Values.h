@@ -51,23 +51,12 @@ namespace DerKern{
 			if(type==3)return reg==z.reg&&imov==z.imov;
 			if(type==4||type==7)return ptr==z.ptr;
 			return 0;
-		}
-		// inline Location&operator=(const Location z){
-		// 	type=z.type;
-		// 	imov=z.imov;
-		// 	reg=z.reg;
-		// 	ptr=z.ptr;
-		// }
+		}inline bool operator!=(Location z)const{return!(z==*this);}
+		inline operator bool()const{return resolve().type;}
+		inline bool operator!()const{return resolve().type;}
 	};
 	typedef Location FLocation;
 	struct _Variable;struct Type;
-	/*struct _Func{
-		bool mayChange[RegisterCount];
-		//bool external;//may or may not need registers from C++
-		pair<Type*,Location>out;//no type=no output
-		uint8_t inC;pair<Type*,Location>*in;//inC=count of pairs at "in"
-		void*f;//where it is located at
-	};*/
 	typedef
 		#if _WIN64||__x86_64__||__ppc64__
 			uint16_t
