@@ -1,3 +1,7 @@
+# What it is
+X86-64 Asm Except More Fun
+This is my idea to make a more comfy and understandable for me Assembler.
+
 # Syntax basics
 "\" does the same as ";" in C
 ";" and "//" are one-line comments
