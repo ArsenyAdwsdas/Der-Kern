@@ -16,7 +16,7 @@ namespace DerKern{
 			Const,ptr1,ptr2,ptr3,
 			//SpecialTypes
 			array,func,
-			IDK,//Is one hell of a problem. The real type is (Type*)IDK.location.eval()
+			IDK//Is one hell of a problem. The real type is (Type*)IDK.location.eval()
 			ENUM_END
 		IDs::T typeID;//would've written  except then I'm not allowed to just do =0...
 		bool isFinal;//1 means *, &, &&, [] aren't allowed
@@ -31,8 +31,7 @@ namespace DerKern{
 			Negate,Plusate,//-,+
 			Not,BNot,//!,~
 			Star,//*
-			Dolla,Hash,//$,#
-			Count
+			Dolla,Hash//$,#
 			ENUM_END
 		ENUM(Ops,uint8_t)
 			Set,//=
@@ -45,8 +44,7 @@ namespace DerKern{
 			Left,BLeft,BRight,Right,//<,<<,>>,>
 			LeftE,BLeftE,BRightE,RightE,//<=,<<=,>>=,>=
 
-			Or,And,Eq,NEq,//||,&&,==,!=
-			Count
+			Or,And,Eq,NEq//||,&&,==,!=
 			ENUM_END
 		TypeExtraS___
 		static Type i8;static Type u8;

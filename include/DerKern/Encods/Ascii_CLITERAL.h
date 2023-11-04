@@ -12,7 +12,7 @@ namespace DerKern{
 				flot,dobl,
 				strng,name
 			};
-			uint8_t type;
+			unsigned type:8;
 			union{
 				 uint8_t  u8; int8_t  i8;
 				uint16_t u16;int16_t i16;
@@ -30,8 +30,7 @@ namespace DerKern{
 			inline CLITERAL_result(string v,bool name){type=11+name;new(&s)string(v);}
 			inline operator bool()const{return type;}
 			inline bool operator!()const{return!type;}
-			inline~CLITERAL_result(){if(type>10)s.~string();}
-			inline _Variable toTV(const Scope*scop){
+			inline _Variable toTV(const Scope*scop=0){
 				if(type==1)return{Type::u8.Const(),Location(&u8)};
 				if(type==2)return{Type::u16.Const(),Location(&u16)};
 				if(type==3)return{Type::u32.Const(),Location(&u32)};
@@ -43,10 +42,10 @@ namespace DerKern{
 				if(type==9)return{Type::f.Const(),Location(&f)};
 				if(type==10)return{Type::d.Const(),Location(&d)};
 				if(type==11)return{Type::str.Const(),Location(&s)};
-				if(type==12&&scop){auto _=*scop->get(s);_.val=_.val.resolve();return _;}
+				if(type==12&&scop){auto w=scop->get(s);if(!w)return{0,{}};auto _=*w;_.b=_.b.resolve();return _;}
 				return{0,{}};
-			}
-			template<typename t>inline operator t()const{
+			}inline _Variable toTV(const Scope*scop=0)const{return((CLITERAL_result*)this)->toTV(scop);}//Yes, a const_cast. SO WHAT, GONNA NAG AND SAY IT'S BAD? WANNA FIGHT ME? THE ".Const()" IN "toTV" SHOULD BE ENOUGH TO KNOW YOU'RE NOT WELCOME IF YOU JUST BLINDLY CHANGE IT.
+			template<typename t>explicit inline operator t()const{
 				if(type==1)return(t)u8;
 				if(type==2)return(t)u16;
 				if(type==3)return(t)u32;
@@ -59,6 +58,22 @@ namespace DerKern{
 				if(type==10)return(t)d;
 				return(t)0xcdcdcdcdcdcdcdcd;
 			}
+			inline CLITERAL_result(const DerKern::ASCII::CLITERAL_result&w){
+				type=w.type;
+				if(type==1)u8=w.u8;
+				if(type==2)u16=w.u16;
+				if(type==3)u32=w.u32;
+				if(type==4)u64=w.u64;
+				if(type==5)i8=w.i8;
+				if(type==6)i16=w.i16;
+				if(type==7)i32=w.i32;
+				if(type==8)i64=w.i64;
+				if(type==9)f=w.f;
+				if(type==10)d=w.d;
+				if(type>10)new(&s)string(w.s);
+			}inline CLITERAL_result(const DerKern::ASCII::CLITERAL_result&&w){new(this)CLITERAL_result(w);}
+			inline~CLITERAL_result(){if(type>10)s.~string();}
+			inline CLITERAL_result&operator=(const CLITERAL_result&w){~CLITERAL_result();new(this)CLITERAL_result(w);return*this;}inline CLITERAL_result&operator=(const CLITERAL_result&&w){return operator=(w);}
 		};
 		//I call it that because I remember "CLITERAL" was in raylib
 		//doesn't go back on fail, only supports numbers, strings, names.

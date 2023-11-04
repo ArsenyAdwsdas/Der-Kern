@@ -11,7 +11,7 @@ namespace DerKern{
 	Type Type::str=Type("string",sizeof(int*));Type Type::_type=Type("type",sizeof(Type));
 	Type Type::VOID=Type("void",1);
 	Type Type::const_container=Type("<CONST>",0);Type Type::array_container=Type("<ARRAY>",0);
-	namespace{INITIALIZER(init){
+	namespace __TYPE{INITIALIZER(init){
 		Type::VOID.size=0;
 	}}
 	Ptr1Type*Type::pointer(){

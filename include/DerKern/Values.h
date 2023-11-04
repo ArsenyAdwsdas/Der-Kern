@@ -1,14 +1,33 @@
 #pragma once
 #include"StandloTypes.h"
 namespace DerKern{
+	template<uint8_t bytes>struct ByteBooly{
+		uint8_t raw[bytes];
+		inline ByteBooly(){for(uint8_t i=0;i<bytes;i++)raw[i]=0;}
+		inline bool operator()(uint8_t N){return raw[N>>3]&(1<<(N&7));}
+		inline bool operator()(uint8_t N,bool val){uint8_t&w=raw[N>>3];N=N&7;w=(w&(~(1<<N)))|((val?1:0)<<N);return val;}
+	};
 	struct RegisterState{
 		#if _WIN64||__x86_64__||__ppc64__
 			typedef uint64_t regT;
 		#else
 			typedef uint32_t regT;
 		#endif
-		regT raw[sizeof(int*)==4?8:16];
-		template<typename t>inline regT&operator[](t z){return raw[z];}
+		regT raw[sizeof(int*)==4?8:16]={0};
+		template<typename t>inline regT&operator[](t r){return raw[r];}
+	};
+	struct KnownStateR:RegisterState{
+		bool known[sizeof(int*)*2]={0};
+		template<typename t>inline bool&operator%(t r){return known[r];}
+	};
+	struct FlagState{
+		uint8_t raw=0;
+		inline bool operator()(uint8_t f){return raw&(1<<f);}
+		inline void operator()(uint8_t f,bool val){raw=(raw&(~(1<<f)))|((val?1:0)<<f);}
+	};
+	struct KnownStateF:FlagState{
+		FlagState known;
+		inline void operator()(uint8_t f,bool val){known(f,1);((FlagState&)*this)(f,val);}
 	};
 	struct Location{
 		ENUM(Types,uint8_t)
@@ -25,8 +44,8 @@ namespace DerKern{
 			};
 			void*ptr;
 		};
-		inline Location&resolve(){auto _=this;while(_->type==7)_=(Location*)_->ptr;return*_;}
 		inline const Location&resolve()const{auto _=this;while(_->type==7)_=(Location*)_->ptr;return*_;}
+		inline Location&resolve(){return(Location&)((const Location*)this)->resolve();}////Yes, a const_cast. SO WHAT, GONNA NAG AND SAY IT'S BAD?
 		inline void*eval(RegisterState s)const{
 			if(type==1)return(void*)(int64_t)imov;
 			if(type==2)return&s[reg];
@@ -42,7 +61,7 @@ namespace DerKern{
 		inline Location(int32_t o){type=1;imov=o;}
 		inline Location(uint8_t r){type=2;reg=r;}
 		inline Location(uint8_t r,int32_t o){type=3;reg=r;imov=o;}
-		inline Location(void*p){type=4;ptr=p;}
+		inline Location(void*p){if(sizeof(int*)==4){type=1;imov=(int32_t)(uintptr_t)p;}else{type=4;ptr=p;}}
 		inline Location(Location*p){type=7;ptr=p;}
 		inline bool operator==(Location z)const{
 			if(type!=z.type)return 0;
@@ -56,7 +75,7 @@ namespace DerKern{
 		inline bool operator!()const{return resolve().type;}
 	};
 	typedef Location FLocation;
-	struct _Variable;struct Type;
+	struct Type;
 	typedef
 		#if _WIN64||__x86_64__||__ppc64__
 			uint16_t
@@ -71,22 +90,23 @@ namespace DerKern{
 	// inline uint8_t&FuncHead_ArgC(FuncHead*z){return*(uint8_t*)(1+&FuncHead_Changies(z));}
 	// inline void*&FuncHead_ArgV(FuncHead*z){return*(void**)(1+&FuncHead_ArgC(z));}
 	
-	struct _Variable{
+	/*struct _Variable{
 		Type*type;
 		//union{
 			Location val;
 		//};
 		inline _Variable():type(0),val(){}
 		inline _Variable(Type*t,Location v=Location()):type(t),val(v){}
-	};
+	};*/
+	typedef pair<Type*,Location>_Variable;
 	typedef pair<string,_Variable>Variable;inline int cmp(const Variable&a,const Variable&b){return cmp(a.a,b.a);}
 	struct DefaultableVariable:Variable{
 		Location deflt;bool deflted=0;
 	};
 	struct Scope{
 		Dicto<string,_Variable,uint16_t,16,cmp>vars;
-		Scope*parent;
-		inline _Variable*get(string n)const{auto z=vars.get(n);if(z)return z;return parent->get(n);}
+		Scope*parent;inline Scope(Scope*p){parent=p;}inline Scope():Scope(0){}
+		inline _Variable*get(string n)const{auto z=vars.get(n);if(z)return z;if(!parent)return 0;return parent->get(n);}
 		inline void set(string n,_Variable z){vars.set(n,z);}
 		void operator+=(Type*t);void operator+=(Type&t);
 	};

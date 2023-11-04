@@ -1,7 +1,8 @@
 #include"../../src/Encods/Ascii.cpp"
 
 using namespace DerKern;
-// How shady... Eh, not like I change it anyway so (char*)"" seems fine here to both me and, for whatever reason, the compiler...
+// Oh how shady it felt... Eh, not like I change it anyway so (char*)"" seems fine here to both me and the compiler...
+// https://eel.is/c++draft/expr.cast#4 explains how it's legal
 void testU8(Inputo::Universa&a,uint8_t expect){
 	uint8_t z;
 	if(!ASCII::u8(&a,&z))printf("ASCII::u8 FAILED ON %.*s\n",a.c.c.size,a.c.c.data);
@@ -14,11 +15,11 @@ int main(int argc, char const *argv[]){
 	str=(char*)"\"\\n1\\n2\\t2\\\\\"";
 	string s;
 	if(!ASCII::str(&str,&s))return-1;
-	if(cmp(s,"\n1\n2\t2\\")!=0)printf("ASCII::str test fail\n");
+	if(cmp(s,"\n1\n2\t2\\")!=0)printf("ASCII::str test fail ```%s```\n",s.c_str());
 
 	str=(char*)"12351\\\n125";
 	ASCII::line(&str,&s);
-	if(cmp(s,"12351\\")!=0)printf("ASCII::line test fail\n");
+	if(cmp(s,"12351\\")!=0)printf("ASCII::line test fail ```%s```\n",s.c_str());
 
 	/*//and here's an old version
 	Inputo::Universa str=(char*)"1";

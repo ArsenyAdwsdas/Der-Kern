@@ -1,6 +1,7 @@
 #pragma once
 #include"Type.h"
 #include"compile.h"
+#include"Instruction.h"
 namespace DerKern{
 	struct FuncArgs{Type**argv;uint8_t argc;inline FuncArgs(Type**a,uint8_t ac){argv=a;argc=ac;}};int cmp(const FuncArgs&,const FuncArgs&);
 	struct FuncBase:FuncArgs{Type*rets;inline FuncBase(Type*r,Type**argv,uint8_t argc):FuncArgs(argv,argc){rets=r;}};int cmp(const FuncBase&,const FuncBase&);
@@ -24,7 +25,8 @@ namespace DerKern{
 		inline FuncType*TYPE()const{return FuncType::Get(rets,argv,argc);}
 		ENUM(Types,uint8_t)
 			Inline,//That's a literal Copy-Paste. Feel free to change argv[i].b
-			Call//And that's a comfy(but not really optimizable) "call" with a "ret"
+			Conwenty,//And that's a comfy(but not really optimizable) "call" with a "ret" that follows call conventions.
+			Unconwenty//An uncomfy "Instructions::x86_64::call" to "ptr" that doesn't follow call conventions.
 			ENUM_END
 		Types::T type;
 		union{
@@ -36,11 +38,33 @@ namespace DerKern{
 		//A lot of thinking is needed to figure out a good way to implement my "why save registers so much when it's not needed?" idea... Well that's the price of overthinking and being stubborn about optimizing the hell out of everything...
 		bool mayChange[sizeof(int*)<<1];//what registers may change. [4](esp)+[5](ebp) will probably mean "special esp/ebp hell"("swap sp,bp", all the actions, ret value to sp, swap again, "ret")
 
-		inline Function(Type*rets,Type**argv,uint8_t argc,Types::T t=Types::Call):FuncBase(rets,argv,argc){
+		inline Function(Type*rets,Type**argv,uint8_t argc,Types::T t=Types::Conwenty):FuncBase(rets,argv,argc){
+			//https://stackoverflow.com/a/38974980 oh hi...
 			type=t;
 			argvLoc=(Location*)malloc(sizeof(Location)*argc);
 			for(uint8_t i=0;i<argc;i++)argvLoc[i]=Location();
 			for(uint8_t i=0;i<sizeof(int*)<<1;i++)mayChange[i]=0;
+			
+			if(t==1){
+				//Thanks https://stackoverflow.com/a/5273354
+				#if UINTPTR_MAX == 0xffffffff//Now what registers may change there?..
+					#ifdef CALL_CONVENTION//#if CALL_CONVENTION==__cdecl//Thanks https://en.wikipedia.org/wiki/X86_calling_conventions#cdecl
+						for(uint8_t i=0;i<3;i++)mayChange[i]=1;
+					//#elif CALL_CONVENTION==__stdcall//THANK YOU http://jdebp.info/FGA/function-calling-conventions.html FOR CONFIRMING THE REGISTERS.
+					//	for(uint8_t i=0;i<3;i++)mayChange[i]=1;
+					#else//The hell is that?
+						//I dunno what idiot(callee) may dare try changing esp and ebp so let's not mark 'em ourselves. Everything else... Well...
+						for(uint8_t i=0;i<4;i++)mayChange[i]=1;
+						for(uint8_t i=6;i<(sizeof(int*)<<1);i++)mayChange[i]=1;
+					#endif
+				#elif _WIN64//Following "Microsoft x64 calling convention" where those registers are allowed to be changed by callee.
+					for(uint8_t i=0;i<3;i++)mayChange[i]=1;
+					for(uint8_t i=8;i<12;i++)mayChange[i]=1;
+				#else//Following "System V AMD64 ABI" where those registers are allowed to be changed by callee.
+					for(uint8_t i=0;i<4;i++)mayChange[i]=1;
+					for(uint8_t i=6;i<12;i++)mayChange[i]=1;
+				#endif
+			}
 		}
 		Function(const FuncType*);//This'll have some problems. For now it can't be usable.
 		bool compile(CompileState&,Location ret,const Location*argv,uint8_t argc);

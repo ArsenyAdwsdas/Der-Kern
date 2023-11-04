@@ -2,10 +2,10 @@
 #include"../src/Values.cpp"
 #include"../src/Instruction.cpp"
 using namespace DerKern;
-
+#error NOT READY
 bool DerKern::Parse1(uint64_t*i,string S,ParseResult*r){throw std::exception();}
 bool TypeCanBe(const Type*expected,const Type*got){
-	#warning I am NOT morally ready for all this "const" stuff... It's nightmare fuel. Too much checking for proper support. This'll do it for now.
+	#warning "I am NOT morally ready for all this "const" stuff... It's nightmare fuel. Too much checking for proper support. This'll do it for now." //https://stackoverflow.com/a/37195204
 	if(expected->typeID==Type::IDs::Const){return expected==got||TypeCanBe(((const ConstType*)expected)->orig,got);}
 	return expected==got;
 }

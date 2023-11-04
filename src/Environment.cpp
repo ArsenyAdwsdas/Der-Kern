@@ -1,5 +1,6 @@
 #include"../include/DerKern/Environment.h"
 #include"Values.cpp"
+#include"Type.cpp"
 namespace DerKern{
 	Environment::Environment(size_t ss){
 		stackSize=ss;stack=(uint8_t*)malloc(ss);

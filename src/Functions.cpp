@@ -1,7 +1,6 @@
 #pragma once
 #include"../include/DerKern/Functions.h"
 #include"Type.cpp"
-#include"compile.cpp"
 namespace DerKern{
 	Type Type::func_container=Type("<FUNCTION>",sizeof(Function));Type Type::overloadery=Type("overloadery",sizeof(OverloadedFunction));
 	SortList<FuncType*,uint16_t,16,cmp>FuncType::_funcs;
@@ -25,6 +24,10 @@ namespace DerKern{
 	int cmp(Function*const&a,Function*const&b){return cmp((const FuncBase&)*a,(const FuncBase&)*b);}
 	int cmp(Function*const&a,FuncBase const&b){return cmp((const FuncBase&)*a,b);}
 	int cmp(Function*const&a,FuncArgs const&b){return cmp((const FuncArgs&)*a,b);}
+	/*void FunctionCall_Delayed(CompileState&s,uint64_t pos,void*f){
+
+		if(!Instructions::_call(s,*(void**)f,pos))printf("!!!FunctionCall_Delayed FAILED!!!\n");
+	}
 	bool Function::compile(CompileState&s,Location rv,const Location*av,uint8_t ac){
 		bool nul[256]={0};
 		if(!retLoc.type){retLoc=rv;nul[255]=1;}
@@ -35,7 +38,9 @@ namespace DerKern{
 			else throw std::exception();//Not ready.
 		}
 		if(type==0){if(!inl->compile(s))return 0;}
-		//else if(type==1){if(!Instruction::_call(s,ptr))return 0;}
+		else if(!ptr)s.posts+={pair<uint64_t,void*>{s.b->count,&ptr},FunctionCall_Delayed};
+		else{if(!Instructions::_call(s,ptr))return 0;}
+		for(uint8_t i=0;i<(sizeof(int*)<<1);i++)if(mayChange[i])s.regs%i=0;
 
 		if(nul[255])retLoc.type=0;
 		for(uint8_t i=0;i<argc;i++){
@@ -43,4 +48,5 @@ namespace DerKern{
 		}
 		return 1;
 	}
+	bool Instructions::CallArged::compile(CompileState&s){return func->compile(s,ret,argv,argc);}*/
 }

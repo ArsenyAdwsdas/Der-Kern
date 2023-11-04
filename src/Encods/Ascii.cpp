@@ -1,3 +1,4 @@
+#pragma once
 #include"../../include/DerKern/Encods/Ascii.h"
 #include"../StandloTypes.cpp"
 namespace DerKern::ASCII{
@@ -16,16 +17,20 @@ namespace DerKern::ASCII{
 			for(int i='A';i<'Z';i++)namable[i]=1;
 	}}
 	#define int(a,b,c,d) a##b##c##d
-	#define pI(a,u) bool u##a(Inputo::Universa*I,int(u,int,a,_t)*_z){\
+	#define pI(a,B,C) bool C##a(Inputo::Universa*I,int(B,int,a,_t)*_z){\
 		char c;if(!I->peek(&c,1))return 0;\
-		bool r=0;int(u,int,a,_t) z=0;if(c=='-'){r=1;(*I)++;if(I->peek(&c,1)&&c<'0'||c>'9')return(*I)--&&0;}else if(c<'0'||c>'9')return 0;\
-		while(I->get(&c,1)&&c>='0'&&c<='9')z=(10*z)+c-'0';\
-		*_z=r?(int(u,int,a,_t))-z:z;\
+		bool r=0;std::remove_pointer<decltype(_z)>::type z=0;if(c=='-'){r=1;(*I)++;if(!I->peek(&c,1)||(c<'0'||c>'9'))return(*I)--&&0;}else if(c<'0'||c>'9')return 0;\
+		while(I->get(&c,1)&&c>='0'&&c<='9')z=(10*z)+c-'0';if(c<'0'||c>'9')(*I)--;\
+		*_z=r?(decltype(z))-z:z;\
 		return 1;\
 	}
 	#define ___NOTH
-	#define ints(a) pI(a,u)pI(a,___NOTH)
+	#define ints(a) pI(a,u,u)pI(a,___NOTH,i)
 	ints(8)ints(16)ints(32)ints(64)
+	#undef ints
+	#undef ___NOTH
+	#undef pI
+	#undef int
 	bool f(Inputo::Universa*I,float*_z){
 		char c;if(!I->peek(&c,1))return 0;
 		bool r=0,d=0;float z=0,_=.1;if(c=='-'){r=1;(*I)++;if(I->peek(&c,1)&&c<'0'||c>'9')return(*I)--&&0;}else if(c<'0'||c>'9')return 0;
@@ -40,9 +45,6 @@ namespace DerKern::ASCII{
 		*_z=r?-z:z;
 		return 1;
 	}
-	#undef ints
-	#undef pI
-	#undef int
 
 
 	bool ch(Inputo::Universa*I,char*_c){
@@ -65,15 +67,16 @@ namespace DerKern::ASCII{
 		BBuf z;char c;uint64_t i=I->getI();
 		if(!I->peek(&c,1)||c!='"')return 0;(*I)++;
 		while(I->peek(&c,1)&&c!='"')if(c=='\n'||!ch(I,&z)){I->setI(i);return 0;}
+		assert(c=='"');
 		*_z=string((char*)z.raw,z.count);return 1;
 	}
 	bool name(Inputo::Universa*I,string*_z){
 		BBuf z;char c;uint64_t i=I->getI();
 		if(!I->peek(&c,1)||!namable[c])return 0;
-		while(I->get(&c,1)&&namable[c])z+=c;
+		while(I->get(&c,1)&&namable[c])z+=c;if(!namable[c])(*I)--;
 		*_z=string((char*)z.raw,z.count);return 1;
 	}
 	bool namend(Inputo::Universa*I){return!namable[I->peekC()];}
-	void line(Inputo::Universa*I,string*_z){BBuf z;char c;while(I->get(&c,1)&&c!='\n'){z+=c;}*_z=string((char*)z.raw,z.count);}
+	void line(Inputo::Universa*I,string*_z){char c;if(!_z){while(I->get(&c,1)&&c!='\n');return;}BBuf z;while(I->get(&c,1)&&c!='\n'){z+=c;}*_z=string((char*)z.raw,z.count);}
 	void spaces(Inputo::Universa*I){while(I->expect(' ')||I->expect('\t'));}
 }

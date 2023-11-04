@@ -42,7 +42,7 @@ namespace DerKern{
 			inline uint64_t peek(void*dst,uint64_t siz){siz=ensure(siz);memcpy(dst,(char*)data+i,siz);return siz;}//i+=<how much can peek>, returns how much could peek
 			inline char peekC(){if(!ensure(1))return 0;return((char*)data)[i];}
 			inline bool expect(char c){if(ensure(1)&&((char*)data)[i]==c){operator++();return 1;}return 0;}
-			template<uint16_t S>inline bool expect(char c[S]){if((ensure(S-1)>=S-1)&&memcmp((char*)data+i,c,S-1)==0){(*this)+=uint64_t(S-1);return 1;}return 0;}
+			template<uint16_t S>inline bool expect(const char(&c)[S]){if((ensure(S-1)>=S-1)&&memcmp((char*)data+i,c,S-1)==0){(*this)+=uint64_t(S-1);return 1;}return 0;}
 		};
 		struct RFileHP{//tries to move by half size
 			constexpr static size_t DEFAULT_SIZE=1024*1024;
@@ -78,7 +78,7 @@ namespace DerKern{
 			inline uint64_t peek(void*dst,uint64_t siz){siz=ensure(siz);memcpy(dst,(char*)data+i,siz);return siz;}//i+=<how much can peek>, returns how much could peek
 			inline char peekC(){if(!_ensure())return 0;return((char*)data)[i];}
 			inline bool expect(char c){if(_ensure()&&((char*)data)[i]==c){operator++();return 1;}return 0;}
-			template<uint16_t S>inline bool expect(char c[S]){if((_ensure()>=S-1)&&memcmp((char*)data+i,c,S-1)==0){(*this)+=uint64_t(S-1);return 1;}return 0;}
+			template<uint16_t S>inline bool expect(const char(&c)[S]){if((_ensure()>=S-1)&&memcmp((char*)data+i,c,S-1)==0){(*this)+=uint64_t(S-1);return 1;}return 0;}
 		};
 		struct Universa{
 			uint8_t type;//0=error
@@ -132,7 +132,7 @@ namespace DerKern{
 			inline char getC(){
 				if(type==3)return f2.getC();
 				if(type==2)return f.getC();
-				if(type==1){if(c.c.size>=c.i)return 0;c.i++;return((char*)c.c.data)[c.i-1];}
+				if(type==1){if(!ensure(1))return 0;c.i++;return((char*)c.c.data)[c.i-1];}
 				return 0;
 			}
 			inline size_t peek(void*dst,uint64_t siz){
@@ -144,7 +144,7 @@ namespace DerKern{
 			inline char peekC(){
 				if(type==3)return f2.peekC();
 				if(type==2)return f.peekC();
-				if(type==1){if(c.c.size>=c.i)return 0;return((char*)c.c.data)[c.i];}
+				if(type==1){if(!ensure(1))return 0;return((char*)c.c.data)[c.i];}
 				return 0;
 			}
 			inline bool expect(char C){
@@ -153,7 +153,7 @@ namespace DerKern{
 				if(type==1){if(ensure(1)&&((char*)c.c.data)[c.i]==C){c.i++;return 1;}return 0;}
 				return 0;
 			}
-			template<uint16_t S>inline bool expect(char C[S]){
+			template<uint16_t S>inline bool expect(const char(&C)[S]){
 				if(type==3)return f2.expect<S>(C);
 				if(type==2)return f.expect<S>(C);
 				if(type==1){if(ensure(S-1)&&memcmp((char*)c.c.data+c.i,C,S-1)==0){c.i+=S-1;return 1;}return 0;}

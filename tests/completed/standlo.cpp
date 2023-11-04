@@ -15,6 +15,14 @@ int main(int argc, char const *argv[]){
 		auto _=z2.get(i);
 		if(!_||*_!=i)printf("Dicto test FAILED at %d %s\n",i,_?"WITH CORRUPTION...":"");
 	}
-
+	
+	Dicto<string,uint8_t,uint16_t,16,cmp>w;
+	w.set("1",1);
+	w.set("5",5);
+	w.set("2",2);
+	w.set("6",6);
+	w.set("4",4);
+	w.set("3",3);
+	for(uint8_t i=0;i<w.count;i++)printf(" %s\n",w.raw[i].a.c_str());
 	return 0;
 }

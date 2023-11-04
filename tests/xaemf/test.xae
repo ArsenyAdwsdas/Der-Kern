@@ -1,0 +1,7 @@
+mov vcx -1
+mov vax vcx
+add cl 1
+mov dx 61166
+xchg dx ax
+ret
+mov vbp vax//it'll straight up crash for changing vbp if this is done
