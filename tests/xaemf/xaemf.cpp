@@ -98,9 +98,7 @@ bool instructio(Inputo::Universa*I,ParseResult*r){
 
 		a.b=a.b.resolve();b.b=b.b.resolve();
 		if((b.b.type==1||b.b.type==4)&&b.a->typeID==Type::IDs::Const){printf("CAN'T SWAP A CONSTANT\n");throw std::exception();}
-		else if(a.a->size<b.a->size){//Expanding "b" is needed... Nah, right now I don't wanna do that...
-
-		}else r->target->ins+=new Instructions::Swap(a.b,b.b,a.a->size);
+		else if(a.a->size<b.a->size){printf("DO YOU REALLY EXPECT TO SWAP WITH DIFFERENT SIZES?\n");throw std::exception();}else r->target->ins+=new Instructions::Swap(a.b,b.b,a.a->size);
 	}else if(I->expect("ret"))r->target->ins+=&Instructions::ret;else return 0;
 	return 1;
 }
