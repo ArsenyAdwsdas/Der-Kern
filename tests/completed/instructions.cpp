@@ -1,4 +1,4 @@
-#include"../../src/compile.cpp"
+#include"../../src/Compile.cpp"
 
 using namespace DerKern;
 int main(){

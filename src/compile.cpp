@@ -1,5 +1,5 @@
 #pragma once
-#include"../include/DerKern/compile.h"
+#include"../include/DerKern/Compile.h"
 #include"Environment.cpp"
 #include"Instruction.cpp"
 #include"StandloExeMem.cpp"

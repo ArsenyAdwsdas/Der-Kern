@@ -1,5 +1,5 @@
-#include"../../src/compile.cpp"
-#include"../../src/parse.cpp"
+#include"../../src/Compile.cpp"
+#include"../../include/DerKern/extra/parse.h"
 #include"../../src/Encods/Ascii_CLITERAL.cpp"
 // X86-64 Asm Except More Fun
 // This will later become like a replacement for NASM... maybe...
@@ -102,12 +102,13 @@ bool instructio(Inputo::Universa*I,ParseResult*r){
 	}else if(I->expect("ret"))r->target->ins+=&Instructions::ret;else return 0;
 	return 1;
 }
-bool DerKern::Parse1(Inputo::Universa*I,ParseResult*r){
+bool Parse1(Inputo::Universa*I,ParseResult*r){
 	if(I->expect('\n'))return 1;
 	if(I->expect("//")||I->expect(';')){ASCII::line(I,0);return 1;}
 	if(I->expect("/*")){while(!(I->getC()=='*'&&I->getC()=='/'))if(!I->ensure(1)){printf("UNTERMINATED /*\n");return 0;}return 1;}
 	if(instructio(I,r)){
-		ASCII::spaces(I);if(!ASCII::namend(I)){printf("UNEXPECTED CHARACTER AFTER INSTRUCTION: '%c'(%d)\n",I->peekC(),int(I->peekC()));return 0;}
+		char c;
+		ASCII::spaces(I);if((c=I->getC())&&c!='\\'&&c!='\n' &&!((c=='/'||c=='#'||c==';')&&(*I)--)){printf("UNEXPECTED CHARACTER AFTER INSTRUCTION: '%c'(%d)\n",c,int(c));return 0;}
 		return 1;
 	}
 	return 0;
@@ -145,7 +146,7 @@ int main(){
 
 	FILE*f=fopen("test.xae","r");fseek(f,0, SEEK_END);auto _s=ftell(f);fseek(f,0,SEEK_SET);void*_=malloc(_s);fread(_,1,_s,f);
 	Inputo::Universa inp=Inputo::Chunk(_,_s);
-	Parse(&p,&inp);
+	Parse<Parse1>(&p,&inp);
 	
 	ins.compile();
 	if(!ins._compiled){printf("COMPILATION FAIL\n");return-1;}

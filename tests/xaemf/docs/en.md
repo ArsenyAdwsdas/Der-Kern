@@ -13,6 +13,7 @@ This is my idea to make a more comfy and understandable for me Assembler.
 There are also variables recognized as entire(all 4/8 bytes depending on the launch environment) 8 first registers
 - vax=eax/rax, vcx=ecx/rcx, vdx=edx/rdx, vbx=ebx/rbx, vsp=esp/rsp, vbp=ebp/rbp, vsi=esi/rsi, vdi=edi/rdi
 
+
 # Instructions
 arguments will be written as `<w>`, for example `<a>` is an argument "a"
 ## add

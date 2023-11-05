@@ -1,5 +1,4 @@
-mov vcx -1
-mov vax vcx
+mov vcx -1\mov vax vcx
 add cl 1
 mov dx 61166
 xchg dx ax

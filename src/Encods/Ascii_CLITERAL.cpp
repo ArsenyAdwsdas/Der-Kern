@@ -1,3 +1,4 @@
+#pragma once
 #include"Ascii.cpp"
 #include"../../include/DerKern/Encods/Ascii_CLITERAL.h"
 namespace DerKern::ASCII{
