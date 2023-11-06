@@ -27,7 +27,6 @@ namespace DerKern{
 			}
 		}
 		if(!r->target->inliny&&(!r->target->ins.count||r->target->ins.last()!=&Instructions::ret))r->target->ins+=&Instructions::ret;//just to make sure it returns instead of dying
-		r->target->ln();
 	}
 	/*template<bool(*parse1)(Inputo::Universa*,ParseResult*)>inline ParseResult Parse(Inputo::Universa*I){
 		ParseResult r;

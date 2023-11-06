@@ -12,7 +12,6 @@ int main(){
 	ins+=&Instructions::ret;
 	ins+=new Instructions::Set8((uint8_t)0,0xcd);
 	
-	ins.ln();
 	ins.compile();
 	if(!ins._compiled){printf("COMPILATION FAIL\n");return-1;}
 	ins.eval(outRegisters.raw);

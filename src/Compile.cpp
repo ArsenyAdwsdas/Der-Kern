@@ -53,6 +53,7 @@ namespace DerKern{
 	}
 	void Instructionary::compile(){
 		assert(!_compiled);
+		if(!lns.count||lns.last()!=ins.count)ln();
 		CompileState co(env,this,inliny);BBuf __b;co.b=&__b;co.i=0;co.line=0;
 		if(!co.compile())throw std::exception();
 		if(inliny)__b.ensure(1);//a proper "ret" just in case some dummy actually uses "call" on it... also handy C++-like inline
