@@ -4,6 +4,6 @@ int main(){
 	instructionary.inliny=1;
 	instructionary +=new DerKern::Instructions::Set32((uint8_t)0,69420);
 	instructionary.compile();
-	uint64_t _=((uint32_t(*)())instructionary._compiled)();
-	printf("%llu\n",_);
+	uint32_t _=((uint32_t(*)())instructionary._compiled)();
+	printf("%lu\n",_);
 }

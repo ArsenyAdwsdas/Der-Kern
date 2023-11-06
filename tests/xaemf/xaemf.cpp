@@ -5,53 +5,6 @@
 // This will later become like a replacement for NASM... maybe...
 
 using namespace DerKern;
-/*Location parseLocation(Inputo::Universa*I,uint8_t&s){
-	s=0;
-	string name;uint8_t i=0;
-	if(ASCII::name(I,&name)){
-		if(name[0]=='r'){s=8;i++;}
-		if(name[i]=='e'){assert(!s);s=4;i++;}
-
-		if(name[i]=='a'){i++;
-			if(name[i]=='l'){assert(!s);i++;if(name.size()!=i)goto err;s=1;return(uint8_t)0;}
-			if(name[i]=='x'){if(!s)s=2;i++;if(name.size()!=i)goto err;s=1;return(uint8_t)0;}
-			goto err;
-		}
-		if(name[i]=='c'){i++;
-			if(name[i]=='l'){assert(!s);i++;if(name.size()!=i)goto err;s=1;return(uint8_t)1;}
-			if(name[i]=='x'){if(!s)s=2;i++;if(name.size()!=i)goto err;s=1;return(uint8_t)1;}
-			goto err;
-		}
-		if(name[i]=='d'){i++;
-			if(name[i]=='l'){assert(!s);i++;if(name.size()!=i)goto err;s=1;return(uint8_t)2;}
-			if(name[i]=='x'){if(!s)s=2;i++;if(name.size()!=i)goto err;s=1;return(uint8_t)2;}
-			if(name[i]=='i'){if(!s)s=2;i++;if(name.size()!=i)goto err;s=1;return(uint8_t)7;}
-			goto err;
-		}
-		if(name[i]=='b'){i++;
-			if(name[i]=='l'){assert(!s);i++;if(name.size()!=i)goto err;s=1;return(uint8_t)3;}
-			if(name[i]=='x'){if(!s)s=2;i++;if(name.size()!=i)goto err;s=1;return(uint8_t)3;}
-			if(name[i]=='p'){if(!s)s=2;i++;if(name.size()!=i)goto err;s=1;return(uint8_t)5;}
-			goto err;
-		}
-		if(name[i]=='s'){i++;
-			if(name[i]=='p'){if(!s)s=2;i++;if(name.size()!=i)goto err;s=1;return(uint8_t)4;}
-			if(name[i]=='i'){if(!s)s=2;i++;if(name.size()!=i)goto err;s=1;return(uint8_t)6;}
-			goto err;
-		}
-		assert(s==8);
-		uint8_t r=name[i++]-'0';
-		if(name.size()!=i&&name[i]>='0'&&name[i]<='9')r=r*10+(name[i++]-'0');
-		if(name[i]=='b'){s=1;i++;}
-		if(name[i]=='w'){assert(s==8);s=2;i++;}
-		if(name[i]=='d'){assert(s==8);s=4;i++;}
-		if(name.size()!=i)goto err;
-		return((sizeof(int*)<<1)>r)?Location():r;
-		err:
-		printf("UNKNOWN NAME %s\n",name.c_str());
-		throw std::exception();
-	}
-}*/
 using ASCII::CLITERAL_result;
 void getArg(CLITERAL_result*a,Inputo::Universa*I,const char*argName,const char*w){
 	*a=ASCII::CLITERAL(I);if(a->type==0){printf("<%s> couldn't be parsed for \"%s\"\n",argName,w);throw std::exception();}
