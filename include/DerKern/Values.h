@@ -14,7 +14,8 @@ namespace DerKern{
 			typedef uint32_t regT;
 		#endif
 		regT raw[sizeof(int*)==4?8:16]={0};
-		template<typename t>inline regT&operator[](t r){return raw[r];}
+		template<typename t>inline constexpr regT&operator[](t r){return raw[r];}
+		inline constexpr static RegisterState Nulled(){RegisterState w;for(uint8_t i=0;i<(sizeof(int*)<<1);i++)w[i]=0;return w;}
 	};
 	struct KnownStateR:RegisterState{
 		bool known[sizeof(int*)*2]={0};

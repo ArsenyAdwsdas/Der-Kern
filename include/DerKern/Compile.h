@@ -22,7 +22,7 @@ namespace DerKern{
 		inline Instructionary(Environment*e){preserves(4,preserves(5,1));inliny=0;_compiled=0;env=e;}
 		List<uint16_t>lns;inline void ln(){lns.append(ins.count);}
 		InstructionaryExtraS___;
-		inline~Instructionary(){env->exeMem.free(_compiled);for(uint16_t i=0;i<ins.count;i++)if(!ins[i]->constant)delete ins[i];}
+		inline~Instructionary(){if(env)env->exeMem.free(_compiled);for(uint16_t i=0;i<ins.count;i++)if(!ins[i]->constant)delete ins[i];}
 
 		static Instructionary&EVALER();//That's what "eval" uses... args=(RegisterState::regT*) where ebp is what to "eval"
 	};
