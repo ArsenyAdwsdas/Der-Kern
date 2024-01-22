@@ -6,12 +6,13 @@ namespace DerKern{
 	#ifndef InstructionaryExtraS___
 	#define InstructionaryExtraS___
 	#endif
+	namespace Simpler{struct insLoc;}
 	struct Instructionary{//"ln()" is needed after all instructions are there
-		ByteBooly<(sizeof(int*)>>2)>preserves;
-		List<Instruction*>ins;Environment*env;bool inliny;
-		inline void operator+=(Instruction*w){ins+=w;}
+		List<Instruction*>ins;Environment*env;bool inliny;Allocery::Allo*insData;
+		RegisterState::bits mayChange;
+		inline void operator+=(Instruction*w){assert(w);ins+=w;}
 		void compile();
-		void inlineInto(BBuf*,CompileState&parent);//basically "compile" except it's forcibly inlined straight into the buffer with all troubly stuff moved to parent
+		void inlineInto(CompileState&parent);//basically "compile" except it's forcibly inlined straight into the buffer with all troubly stuff moved to parent
 		void eval(RegisterState::regT regs[sizeof(int*)<<1]);//Yes, it's a pretty fake "eval"(swap registers,call,swap registers). ebp gets overwritten and it's not meant to be used as is
 		inline uint32_t getSize(){if(!_compiled)return 0;return*(uint32_t*)(uintptr_t(_compiled)-4);}
 		union{
@@ -19,28 +20,56 @@ namespace DerKern{
 			//UNFORTUNATELY IT DOESN'T CARE ABOUT WHAT IT SHOULD DO AND SOMETIMES MAKES THESE POINTERS DIFFERENT
 			// void(*call)();//use it like a normal function
 		};
-		inline Instructionary(Environment*e){preserves(4,preserves(5,1));inliny=0;_compiled=0;env=e;}
+		inline Instructionary(Environment*e){insData=0;inliny=0;_compiled=0;env=e;}
 		List<uint16_t>lns;inline void ln(){lns.append(ins.count);}
 		InstructionaryExtraS___;
 		inline~Instructionary(){if(env)env->exeMem.free(_compiled);for(uint16_t i=0;i<ins.count;i++)if(!ins[i]->constant)delete ins[i];}
 
 		static Instructionary&EVALER();//That's what "eval" uses... args=(RegisterState::regT*) where ebp is what to "eval"
+		template<typename T>inline T*allo(){if(!insData){return new T();}T*_=(T*)insData->valloc(sizeof(T));new(_)T();_->constant=1;return _;}
+		template<typename T>inline void add(){(*this)+=allo<T>();}
+		template<typename T,typename A>inline T*allo(A a){if(!insData){return new T(a);}T*_=(T*)insData->valloc(sizeof(T));new(_)T(a);_->constant=1;return _;}
+		template<typename T,typename A>inline void add(A a){(*this)+=allo<T>(a);}
+		template<typename T,typename A,typename B>inline T*allo(A a,B b){if(!insData){return new T(a,b);}T*_=(T*)insData->valloc(sizeof(T));new(_)T(a,b);_->constant=1;return _;}
+		template<typename T,typename A,typename B>inline void add(A a,B b){(*this)+=allo<T>(a,b);}
+		template<typename T,typename A,typename B,typename C>inline T*allo(A a,B b,C c){if(!insData){return new T(a,b,c);}T*_=(T*)insData->valloc(sizeof(T));new(_)T(a,b,c);_->constant=1;return _;}
+		template<typename T,typename A,typename B,typename C>inline void add(A a,B b,C c){(*this)+=allo<T>(a,b,c);}
+		template<typename T,typename A,typename B,typename C,typename D>inline T*allo(A a,B b,C c,D d){if(!insData){return new T(a,b,c,d);}T*_=(T*)insData->valloc(sizeof(T));new(_)T(a,b,c,d);_->constant=1;return _;}
+		template<typename T,typename A,typename B,typename C,typename D>inline void add(A a,B b,C c,D d){(*this)+=allo<T>(a,b,c,d);}
+		inline void add(Instruction*i){(*this)+=i;}
+		inline void pasteTo(Instructionary*i)const{assert(!_compiled);i->ins.movFrom(ins);}
+		Simpler::insLoc operator[](Location l);
+	};
+	template<>inline void Instructionary::add<Instructions::Return0>(){(*this)+=&Instructions::ret;}
+	template<>inline void Instructionary::add<Instructions::Noth>(){(*this)+=&Instructions::noth;}
+	template<>inline void Instructionary::add<Instructions::StackPURGE>(){(*this)+=&Instructions::stackPURGE;}
+	template<>inline void Instructionary::add<Instructions::TransitionTo>(){(*this)+=&Instructions::transitTo;}
+	template<>inline void Instructionary::add<Instructions::TransitionFrom>(){(*this)+=&Instructions::transitFrom;}
+	struct DefaultableVariable:_Variable{
+		Instructionary*deflt;//if you're not gonna init the variable then use <deflt> if it's not 0
+		inline void operator()(Instructionary*ins)const{if(deflt)deflt->pasteTo(ins);}
+		inline DefaultableVariable(Type*a,Location b):_Variable(a,b){deflt=0;}
+		inline DefaultableVariable(_Variable w):_Variable(w){deflt=0;}
+		inline DefaultableVariable(Type*a,Location b,Instructionary*c):_Variable(a,b){deflt=c;}
 	};
 	struct CompileState{
-		ByteBooly<(sizeof(int*)>>2)>usedRegisters;
 		Instructionary*origin;Environment*e;bool inlining;
 		uint16_t i,line;//the current instruction and the current line
 		List<uint32_t>lns;//indecies of the first bytes each(except the last one) line doesn't take, do fix 'em all if manually editing "BBuf"
 		BBuf*b;
+		uint16_t stackClaimed,stackUsed;
+		// inline Location stackClaim(uint16_t w){stacked+=w;Instructions::StackClaim(w).compile(*this);return Location::loca(stacked);}
+		// inline Location stackClaimed(uint16_t w){stacked+=w;return Location::loca(stacked);}
+		// inline void stackUnclaim(uint16_t w){stacked-=w;Instructions::StackUnclaim(w).compile(*this);}
+		// inline void stackUnclaimed(uint16_t w){stacked-=w;}
 		inline void ln(uint32_t i){lns.append(i);}
-		inline bool UnusedRegister(uint8_t*r){for(uint8_t i=0;i<(sizeof(int*)<<1);i++)if(!usedRegisters(i)){*r=i;return 1;}return 0;}
 		List<pair<pair<uint32_t,void*>,bool(*)(CompileState&,uint32_t,void*)>>posts;Allocery::Linear postsData;void post();
 		inline~CompileState(){posts.death();lns.death();}
 
-		//My logic kinda became dead inside when I realized how troublesome all "jmp" s--- will be...
+		//My logic kinda became dead inside when I realized how troublesome all "jmp" s--- will make it...
 		//KnownStateR regs;//For optimizing. You Do Realise That Threads Don't Just Use Same Registers, right?
 		//KnownStateF flgs;//For optimizing. You Do Realise That Threads Don't Just Use Same Status Flags, right?.. How troublesome... I'll have to SOMEHOW update 'em myself...
-		//KnownStateM mem;//THAT probably shouldn't be done/used because of threads and sh--... Will end up doing it though...
+		////KnownStateM mem;//THAT probably shouldn't be done/used because of threads and sh--... Will maybe end up doing so though...
 		
 		bool compile();
 
@@ -61,8 +90,9 @@ namespace DerKern{
 		};
 		SortList<pair<uint32_t,Backpaw>,uint16_t,16,cmpA<uint32_t,Backpaw,cmp>>backpawchy;// 'tis a bother...
 
-		inline CompileState(){usedRegisters(4,usedRegisters(5,1));}
-		inline CompileState(Environment*env,Instructionary*orig,bool inl=0):CompileState(){e=env;origin=orig;inlining=inl;}
+		inline CompileState(){stackRegister=4;line=i=0;stackClaimed=stackUsed=0;}
+		inline CompileState(Environment*env,Instructionary*orig,BBuf*buf,bool inl=0):CompileState(){e=env;origin=orig;inlining=inl;b=buf;}
+		uint8_t stackRegister;
 	};
 	// namespace Instructions{struct Paste:Instruction{
 	// 	Instructionary r;

@@ -3,18 +3,26 @@
 namespace DerKern{
 	struct CompileState;
 	namespace Instructions{//https://www.felixcloutier.com/x86/
+		/*struct RetPop:Return0{
+			uint16_t w;
+			inline RetPop(uint16_t w){v=w;}
+			bool compile(CompileState&)override;
+		};*/
+		constexpr uint8_t retSize=1,stackClaimMaxSize=6+(sizeof(int*)>>3),stackUnclaimMaxSize=stackClaimMaxSize;//this should make porting from x86 a bit less painful
 		//return 0 on failure, siz must be 1/2/4/8
-		namespace x86_64{
-			inline void exposeRegisters(Scope&s){
+		namespace x86_64{//https://www.agner.org/optimize/optimizing_assembly.pdf
+			inline void exposeRegisters(DerKern::Scope&s){
 				s.set("eax",_Variable(&Type::u32,(uint8_t)0));s.set("ax",_Variable(&Type::u16,(uint8_t)0));s.set("al",_Variable(&Type::u8,(uint8_t)0));
 				s.set("ecx",_Variable(&Type::u32,(uint8_t)1));s.set("cx",_Variable(&Type::u16,(uint8_t)1));s.set("cl",_Variable(&Type::u8,(uint8_t)1));
 				s.set("edx",_Variable(&Type::u32,(uint8_t)2));s.set("dx",_Variable(&Type::u16,(uint8_t)2));s.set("dl",_Variable(&Type::u8,(uint8_t)2));
 				s.set("ebx",_Variable(&Type::u32,(uint8_t)3));s.set("bx",_Variable(&Type::u16,(uint8_t)3));s.set("bl",_Variable(&Type::u8,(uint8_t)3));
-				s.set("esp",_Variable(&Type::u32,(uint8_t)4));s.set("sp",_Variable(&Type::u16,(uint8_t)4));s.set("spl",_Variable(&Type::u8,(uint8_t)4));
-				s.set("ebp",_Variable(&Type::u32,(uint8_t)5));s.set("bp",_Variable(&Type::u16,(uint8_t)5));s.set("bpl",_Variable(&Type::u8,(uint8_t)5));
-				s.set("esi",_Variable(&Type::u32,(uint8_t)6));s.set("si",_Variable(&Type::u16,(uint8_t)6));s.set("sil",_Variable(&Type::u8,(uint8_t)6));
-				s.set("edi",_Variable(&Type::u32,(uint8_t)7));s.set("di",_Variable(&Type::u16,(uint8_t)7));s.set("dil",_Variable(&Type::u8,(uint8_t)7));
+				s.set("esp",_Variable(&Type::u32,(uint8_t)4));s.set("sp",_Variable(&Type::u16,(uint8_t)4));
+				s.set("ebp",_Variable(&Type::u32,(uint8_t)5));s.set("bp",_Variable(&Type::u16,(uint8_t)5));
+				s.set("esi",_Variable(&Type::u32,(uint8_t)6));s.set("si",_Variable(&Type::u16,(uint8_t)6));
+				s.set("edi",_Variable(&Type::u32,(uint8_t)7));s.set("di",_Variable(&Type::u16,(uint8_t)7));
 				if(sizeof(int*)>4){
+					s.set("spl",_Variable(&Type::u8,(uint8_t)4));s.set("bpl",_Variable(&Type::u8,(uint8_t)5));
+					s.set("sil",_Variable(&Type::u8,(uint8_t)6));s.set("dil",_Variable(&Type::u8,(uint8_t)7));
 					s.set("rax",_Variable(&Type::u64,(uint8_t)0));
 					s.set("rcx",_Variable(&Type::u64,(uint8_t)1));
 					s.set("rdx",_Variable(&Type::u64,(uint8_t)2));
@@ -40,12 +48,12 @@ namespace DerKern{
 				,qword=8
 				#endif
 				ENUM_END inline bool validS(Size::T s){return s==1||s==2||s==4||(sizeof(int*)&s);}
-			ENUM(Register,uint8_t)
+			ENUM(Register,uint8_t)//https://www.swansontec.com/sregisters.html
 				eax,ecx,edx,ebx,esp,ebp,esi,edi//Yeah it really goes in that order... a c d b... Let's teach Intel the alphabet!
 				#if defined(__x86_64__) || defined(_M_X64)
 				,r8,r9,r10,r11,r12,r13,r14,r15
 				#endif
-				//,high=16//high bit means you want the other half of register
+				//,data=-1//OH FU--- WAIT I CAN JUST SET THIS AND I'LL HAVE A POINTER TO MY VARIABLES AND S---? THIS SIMPLIFIES IT A LOT... Mostly... maybe... if I can ask the OS for a new one... Meh, can like just use r15 if necessary... Why did I not realize it?.. Ah right, no one told me and I strongly refused to look into those segments and s--- after all the OS creation attempt torture I sent myself through...
 				ENUM_END
 			ENUM(Flags,uint8_t)
 				CF,OF,SF,//Carry,Overflow,result Sign bit
@@ -62,8 +70,7 @@ namespace DerKern{
 			// bool adc(BBuf*,Location to,Location f,uint8_t siz);					//to+=f+CF;		OF	SF	ZF	AF	CF	PF
 			// bool adc(BBuf*,Location to,uint32_t v,uint8_t siz);//Unfortunately sign extends siz=8
 			// bool adcx(BBuf*,Register::T to,Location f,uint8_t siz);					//to+=f+CF;						CF		size=4/8
-			// bool add(BBuf*,Location to,Location f,uint8_t siz);					//to+=f;		OF	SF	ZF	AF	CF	PF
-			// bool add(BBuf*,Location to,uint32_t v,uint8_t siz);//Unfortunately sign extends siz=8
+
 			// bool addpd(BBuf*,FRegister::T to,FLocation f);//to(double)[i]+=f(double)[i]	i=0,1
 			// bool vaddpd(BBuf*,FRegister::T to,FRegister::T a,FLocation b,FSize::T);//to(double)[i]+=a(double)[i]+b(double)[i]	i=0,size(double)
 			// //bool vaddpd( BBuf*,FRegister to,FRegister a,FLocation b,FSize);
@@ -77,10 +84,13 @@ namespace DerKern{
 			// bool bextr(BBuf*,Register::T to,Location f1,Register::T f2,uint8_t siz);	//				OF=0SF=?ZF	AF=?CF=0PF=?size=4/8
 
 			// bool blsi(BBuf*,Register::T to,Location f,uint8_t siz);	//to=lowest bit in f			OF=0SF	ZF	AF=?CF=fPF=?size=4/8
-			uint16_t add(CompileState&,Location to,Location f,uint8_t siz);
-			uint16_t addI(CompileState&,Location to,int32_t v,uint8_t siz);
+			uint16_t add(CompileState&,Location to,Location f,uint8_t siz);		//to+=f;		OF	SF	ZF	AF	CF	PF
+			uint16_t addI(CompileState&,Location to,int32_t v,uint8_t siz);		//to+=f;		OF	SF	ZF	AF	CF	PF
 
 			uint16_t call(CompileState&,Location);
+			uint16_t jmp(CompileState&,Location);
+
+			uint16_t lea(CompileState&,Location to,Location v);
 
 			uint16_t mov(CompileState&,Location to,Location f,uint8_t siz);
 			uint16_t movI(CompileState&,Location to,uint64_t v,uint8_t siz);
@@ -88,9 +98,14 @@ namespace DerKern{
 			uint16_t pop(CompileState&,Location v,uint8_t siz);
 			uint16_t push(CompileState&,Location v,uint8_t siz);
 
+			uint16_t sub(CompileState&,Location to,Location f,uint8_t siz);		//to+=f;		OF	SF	ZF	AF	CF	PF
+			uint16_t subI(CompileState&,Location to,int32_t v,uint8_t siz);		//to+=f;		OF	SF	ZF	AF	CF	PF
+
 			uint16_t xchg(CompileState&,Location to,Location f,uint8_t siz);
 
-			uint16_t jmp(CompileState&,uint32_t off);
+
+			uint16_t makeXMM(CompileState&,Location f1,Location f2);//https://stackoverflow.com/a/28380358 // full ModRM!
+			//https://software.intel.com/sites/landingpage/IntrinsicsGuide/
 		}
 	}
 }

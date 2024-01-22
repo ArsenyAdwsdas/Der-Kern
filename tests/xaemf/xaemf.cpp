@@ -21,13 +21,13 @@ bool instructio(Inputo::Universa*I,ParseResult*r){
 		a.b=a.b.resolve();b.b=b.b.resolve();
 		if((b.b.type==1||b.b.type==4)&&b.a->typeID==Type::IDs::Const){
 			uint64_t w;w=(uint64_t)_b;
-			if(a.a->size==1)r->target->ins+=new Instructions::Set8(a.b,(uint8_t)w);
-			if(a.a->size==2)r->target->ins+=new Instructions::Set16(a.b,(uint16_t)w);
-			if(a.a->size==4)r->target->ins+=new Instructions::Set32(a.b,(uint32_t)w);
-			if(a.a->size==8)r->target->ins+=new Instructions::Set64(a.b,w);
+			if(a.a->size==1)r->target->add<Instructions::Set8>(a.b,(uint8_t)w);
+			if(a.a->size==2)r->target->add<Instructions::Set16>(a.b,(uint16_t)w);
+			if(a.a->size==4)r->target->add<Instructions::Set32>(a.b,(uint32_t)w);
+			if(a.a->size==8)r->target->add<Instructions::Set64>(a.b,w);
 		}else if(a.a->size<b.a->size){//Expanding "b" is needed... Nah, right now I don't wanna do that...
 
-		}else r->target->ins+=new Instructions::Set(a.b,b.b,a.a->size);
+		}else r->target->add<Instructions::Set>(a.b,b.b,a.a->size);
 	}else if(I->expect("add")){
 		CLITERAL_result _a;getArg(&_a,I,"a","add");argSep(I);CLITERAL_result _b;getArg(&_b,I,"b","add");
 		_Variable a=resArg(_a,r),b=resArg(_b,r);
@@ -37,12 +37,12 @@ bool instructio(Inputo::Universa*I,ParseResult*r){
 		a.b=a.b.resolve();b.b=b.b.resolve();
 		if((b.b.type==1||b.b.type==4)&&b.a->typeID==Type::IDs::Const){
 			int32_t w;w=(int32_t)_b;
-			if(a.a->size==1)r->target->ins+=new Instructions::Add8_1(a.b,(uint8_t)w);
-			if(a.a->size==2)r->target->ins+=new Instructions::Add16_1(a.b,(uint16_t)w);
-			if(a.a->size==4)r->target->ins+=new Instructions::Add32_1(a.b,w);
+			if(a.a->size==1)r->target->add<Instructions::Add8_1>(a.b,(uint8_t)w);
+			if(a.a->size==2)r->target->add<Instructions::Add16_1>(a.b,(uint16_t)w);
+			if(a.a->size==4)r->target->add<Instructions::Add32_1>(a.b,w);
 		}else if(a.a->size<b.a->size){//Expanding "b" is needed... Nah, right now I don't wanna do that...
 
-		}else r->target->ins+=new Instructions::Add_1(a.b,b.b,a.a->size);
+		}else r->target->add<Instructions::Add_1>(a.b,b.b,a.a->size);
 	}else if(I->expect("xchg")){
 		CLITERAL_result _a;getArg(&_a,I,"a","xchg");argSep(I);CLITERAL_result _b;getArg(&_b,I,"b","xchg");
 		_Variable a=resArg(_a,r),b=resArg(_b,r);
@@ -51,7 +51,7 @@ bool instructio(Inputo::Universa*I,ParseResult*r){
 
 		a.b=a.b.resolve();b.b=b.b.resolve();
 		if((b.b.type==1||b.b.type==4)&&b.a->typeID==Type::IDs::Const){printf("CAN'T SWAP A CONSTANT\n");throw std::exception();}
-		else if(a.a->size<b.a->size){printf("DO YOU REALLY EXPECT TO SWAP WITH DIFFERENT SIZES?\n");throw std::exception();}else r->target->ins+=new Instructions::Swap(a.b,b.b,a.a->size);
+		else if(a.a->size<b.a->size){printf("DO YOU REALLY EXPECT TO SWAP WITH DIFFERENT SIZES?\n");throw std::exception();}else r->target->add<Instructions::Swap>(a.b,b.b,a.a->size);
 	}else if(I->expect("ret"))r->target->ins+=&Instructions::ret;else return 0;
 	return 1;
 }

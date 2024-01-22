@@ -104,10 +104,11 @@ namespace DerKern{
 
 	//a=startIndex, b is the index where the result of the search is(or should be), c=endIndex, z(T*)=array to search in with <cmp>, v(T2)=what to search
 	//returns 1 when successfuly found, else 0
+	//cmp's >0 means the target is after the given <a>, <0 means the target is before it
 	template<typename T,typename T2,int(*cmp)(const T&,const T2&),typename S>inline bool BinSearch(S a,S&b,S c,const T*z,const T2&v){
 		if(c>99999)printf("!!!BinSearch <c> seems too big!!!\n");//an extra sanity check to be a bit more sure I don't try "c=count-1" again
 		while(c>a){
-			b=(a+c)>>1;
+			b=a+((c-a)>>1);
 			int _=cmp(z[b],v);
 			if(_==0){return 1;}
 			else if(_>0)a=b+1;else if(_<0)c=b;
@@ -117,6 +118,8 @@ namespace DerKern{
 	// template<typename T,typename T2,int(*cmp)(const T&,const T&),typename S>inline bool BinSearch(S a,S&b,S c,const T*z,const T2&&v){return BinSearch<T,T2,cmp,S>(a,b,c,z,(const T2&)v);}
 	// template<typename T,int(*cmp)(const T&,const T&),typename S>inline bool BinSearch(S a,S&b,S c,const T*z,const T&v){return BinSearch<T,T,cmp,S>(a,b,c,z,v);}
 	// template<typename T,int(*cmp)(const T&,const T&),typename S>inline bool BinSearch(S a,S&b,S c,const T*z,const T&&v){return BinSearch<T,T,cmp,S>(a,b,c,z,v);}
+	template<typename T>inline uint8_t lowBitI(T _){for(uint8_t i=sizeof(_)*8-1;i>=0;i--)if(_&(1<<i))return i;return-1;}
+	template<typename T>inline uint8_t highBitI(T _){for(uint8_t i=sizeof(_)*8-1;i>=0;i--)if(_&(1<<i))return i;return-1;}
 
 	template<typename T>inline T*mallocCpy(const T*a,size_t c){T*_=(T*)malloc(sizeof(T)*c);memcpy(_,a,sizeof(T)*c);return _;}
 
@@ -196,8 +199,8 @@ namespace DerKern{
 		inline void death(){if(!size)return;for(sizeT i=0;i<count;i++)raw[i].~T();free(raw);}
 		inline T&operator+=(T z){return append(z);}
 		inline List<T,sizeT,Exp> cpy()const{List _;_.append(raw,count);return _;}
-		template<typename sizeT2=uint16_t,sizeT Exp2=16>inline void cpyTo(List<T,sizeT2,Exp2>&t)const{t.append(raw,count);}
-		template<typename sizeT2=uint16_t,sizeT Exp2=16>inline void cpyFrom(List<T,sizeT2,Exp2>&t){append(t.raw,t.count);}
+		template<typename sizeT2=uint16_t,sizeT Exp2=16>inline void movTo(List<T,sizeT2,Exp2>&t)const{t.append(raw,count);}
+		template<typename sizeT2=uint16_t,sizeT Exp2=16>inline void movFrom(const List<T,sizeT2,Exp2>&t){append(t.raw,t.count);}
 		template<typename sizeT2=uint16_t,sizeT Exp2=16>inline List<T,sizeT2,Exp2> cpyAs()const{List<T,sizeT2,Exp2>_;_.append(raw,count);return _;}
 	};
 	template<typename K,typename V,typename sizeT,sizeT Exp,int(*cmp)(const K&,const K&)>struct Dicto;
@@ -223,16 +226,16 @@ namespace DerKern{
 		// template<typename T2,int(*Cmp)(const T2&,const T2&)=cmp>inline T&setKV(const T2&&k,const T&v){return setKV<T2,Cmp>(k,v);}
 		template<typename T2,int(*Cmp)(const T&,const T2&)=cmp>inline T&setKV(const T2&&k,const T&&v){return setKV<T2,Cmp>(k,v);}
 
-		template<typename sizeT2=uint16_t,sizeT Exp2=16,int(*cmp2)(const T&,const T&)>inline void cpyTo(SortList<T,sizeT2,Exp2,cmp2>&t)const{for(sizeT i=0;i<this->count;i++)t.set(this->raw[i]);}
-		template<typename sizeT2=uint16_t,sizeT Exp2=16,int(*cmp2)(const T&,const T&)>inline void cpyFrom(SortList<T,sizeT2,Exp2,cmp2>&t){for(sizeT i=0;i<t.count;i++)set(t.raw[i]);}
-		template<typename sizeT2=uint16_t,sizeT Exp2=16>inline void cpyFrom(List<T,sizeT2,Exp2>&t){for(sizeT i=0;i<t.count;i++)set(t.raw[i]);}
+		template<typename sizeT2=uint16_t,sizeT Exp2=16,int(*cmp2)(const T&,const T&)>inline void movTo(SortList<T,sizeT2,Exp2,cmp2>&t)const{for(sizeT i=0;i<this->count;i++)t.set(this->raw[i]);}
+		template<typename sizeT2=uint16_t,sizeT Exp2=16,int(*cmp2)(const T&,const T&)>inline void movFrom(const SortList<T,sizeT2,Exp2,cmp2>&t){for(sizeT i=0;i<t.count;i++)set(t.raw[i]);}
+		template<typename sizeT2=uint16_t,sizeT Exp2=16>inline void movFrom(const List<T,sizeT2,Exp2>&t){for(sizeT i=0;i<t.count;i++)set(t.raw[i]);}
 		operator List<T,sizeT,Exp>()=delete;
 		inline T&operator+=(T z){return set(z);}
 
 		//now to "rename" and hide some to prevent accidental use
 		inline T&_insert(T v,sizeT at){return insert(v,at);};inline T*_insert(T*v,sizeT at,sizeT c){return insert(v,at,c);}
 		inline T&_first(){return first();}inline T&_last(){return last();}
-		protected:using List<T,sizeT,Exp>::first;using List<T,sizeT,Exp>::last;using List<T,sizeT,Exp>::cpyFrom;using List<T,sizeT,Exp>::append;using List<T,sizeT,Exp>::insert;using List<T,sizeT,Exp>::operator+=;using List<T,sizeT,Exp>::claim;
+		protected:using List<T,sizeT,Exp>::first;using List<T,sizeT,Exp>::last;using List<T,sizeT,Exp>::movFrom;using List<T,sizeT,Exp>::append;using List<T,sizeT,Exp>::insert;using List<T,sizeT,Exp>::operator+=;using List<T,sizeT,Exp>::claim;
 	};
 	template<typename K,typename V,typename sizeT,sizeT Exp,int(*_cmp)(const K&,const K&)>struct Dicto:SortList<pair<K,V>,sizeT,Exp,cmpA<K,V,_cmp>>{
 		inline Dicto(){}
@@ -251,6 +254,15 @@ namespace DerKern{
 			Allo*next=0;
 			virtual void*valloc(uint32_t)=0;
 			inline void*alloCpy(void*_,uint32_t siz){void*r=valloc(siz);memcpy(r,_,siz);return r;}
+			inline void*alloCpyEx(void*_,uint32_t _siz,uint32_t siz){void*r=valloc(siz);memcpy(r,_,_siz);return r;}//WinAPI infected me with those "Ex"es...
+			template<typename T>inline T*alloc(){T*_=(T*)valloc(sizeof(T));new(_)T();return _;}
+			template<typename T,typename A>inline T*alloc(A a){T*_=(T*)valloc(sizeof(T));new(_)T(a);return _;}
+			template<typename T,typename A,typename B>inline T*alloc(A a,B b){T*_=(T*)valloc(sizeof(T));new(_)T(a,b);return _;}
+			template<typename T,typename A,typename B,typename C>inline T*alloc(A a,B b,C c){T*_=(T*)valloc(sizeof(T));new(_)T(a,b,c);return _;}
+			template<typename T>inline T*make(){return alloc<T>();}
+			template<typename T,typename A>inline T*make(A a){return alloc<T>(a);}
+			template<typename T,typename A,typename B>inline T*make(A a,B b){return alloc<T>(a,b);}
+			template<typename T,typename A,typename B,typename C>inline T*make(A a,B b,C c){return alloc<T>(a,b,c);}
 		};struct AlloLoggy:Allo{inline AlloLoggy(Allo*z){next=z;}inline void*alloc(uint32_t s){auto _=valloc(s);printf("Allocated %lu bytes: %p",s,_);return _;}void*valloc(uint32_t)override;};
 		struct Allo2:Allo{
 			virtual void vfree(void*)=0;
@@ -315,7 +327,7 @@ namespace DerKern{
 				if(!s){free(_w);return;}//not like you're allowed to write any bytes even if you "shrink"(with s=0) instead of using "free"... So just accept this.
 				auto w=(decltype(s)*)(uintptr_t(_w)-sizeof(s));
 				auto _s=*w;
-				if(s>_s){printf("!!!ATTEMPTED TO SHRINK TO BIGGER SIZE!!!\n");throw std::exception();}
+				if(s>_s){printf("!!!ATTEMPTED TO SHRINK %lu TO %lu!!!\n",unsigned(*w),unsigned(s));throw std::exception();}
 				if(_s<s+sizeof(s))return;//not enough space to shrink properly, abort
 				*w=s;*(w=(decltype(s)*)((uint8_t*)_w+s))=_s-s-sizeof(s);
 
@@ -340,7 +352,7 @@ namespace DerKern{
 				#if defined(_WIN32)||defined(WIN32)
 					if(!(_=(uint8_t*)VirtualAlloc(0, s, MEM_COMMIT, PAGE_EXECUTE_READWRITE)))printf("!!!FAILED TO ALLOCATE %lu MEMORY!!! at " ___STR(__LINE__) " of " __FILE__" because %lx\n",(long)s,GetLastError());
 				#else
-					if((_=(uint8_t*)mmap(0,s,PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANONYMOUS | MAP_SHARED,-1, 0))!=MAP_FAILED)printf("!!!FAILED TO mmap %lu MEMORY!!! at " ___STR(__LINE__) " of " __FILE__" because %lx\n",(long)s,GetLastError());
+					if((_=(uint8_t*)mmap(0,s,PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANONYMOUS | MAP_SHARED,-1, 0))==MAP_FAILED)printf("!!!FAILED TO mmap %lu MEMORY!!! at " ___STR(__LINE__) " of " __FILE__" because %lx\n",(long)s,errno);
 				#endif
 				raw=(uint8_t*)_;
 			}
@@ -348,7 +360,7 @@ namespace DerKern{
 			void*alloc(uint32_t s);void*valloc(uint32_t s)override;
 			inline void goFreeYourself(){
 				#if defined(_WIN32)||defined(WIN32)
-					VirtualFree(raw,size,MEM_RELEASE);
+					VirtualFree(raw,0,MEM_RELEASE);
 				#else
 					munmap(raw,size);
 				#endif
@@ -364,7 +376,7 @@ namespace DerKern{
 				#if defined(_WIN32)||defined(WIN32)
 					if(!(raw=(uint8_t*)VirtualAlloc(0, size, MEM_COMMIT, PAGE_EXECUTE_READWRITE)))printf("!!!FAILED TO ALLOCATE %lu MEMORY FOR LinearExe!!! at " ___STR(__LINE__) " of " __FILE__" because %lx\n",(long)s,GetLastError());
 				#else
-					if((raw=(uint8_t*)mmap(0,size,PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANONYMOUS | MAP_SHARED,-1, 0))!=MAP_FAILED)printf("!!!FAILED TO mmap %lu MEMORY FOR LinearExe!!! at " ___STR(__LINE__) " of " __FILE__" because %lx\n",(long)s,GetLastError());
+					if((raw=(uint8_t*)mmap(0,size,PROT_READ|PROT_WRITE|PROT_EXEC, MAP_ANONYMOUS | MAP_SHARED,-1, 0))==MAP_FAILED)printf("!!!FAILED TO mmap %lu MEMORY FOR LinearExe!!! at " ___STR(__LINE__) " of " __FILE__" because %lx\n",(long)s,errno);
 				#endif
 			}
 			inline LinearExe():LinearExe(DEFAULT_SIZE){}
@@ -374,7 +386,7 @@ namespace DerKern{
 			}void*valloc(uint32_t s)override;
 			inline~LinearExe(){
 				#if defined(_WIN32)||defined(WIN32)
-					VirtualFree(raw,size,MEM_RELEASE);
+					VirtualFree(raw,0,MEM_RELEASE);
 				#else
 					munmap(raw,size);
 				#endif

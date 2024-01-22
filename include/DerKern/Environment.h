@@ -1,6 +1,6 @@
 #pragma once
-#include"Type.h"
 #include"Values.h"
+#include"Erroring.h"
 namespace DerKern{
 	struct Environment:Scope{
 		Environment(size_t stackSize);inline Environment():Environment(1024*512){}
@@ -11,7 +11,6 @@ namespace DerKern{
 		uint32_t stackSize;
 
 		~Environment();
-		int32_t&pointTo(string name,Type*,void*location);//returns offset to access it
 
 		Allocery::BArrExe exeMem;
 	};

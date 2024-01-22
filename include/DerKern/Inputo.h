@@ -2,7 +2,11 @@
 #include<string.h>
 #include<stdint.h>
 #include<stdlib.h>
+#define _FILE_OFFSET_BITS 64//https://stackoverflow.com/a/1035750
 #include<stdio.h>
+#if !(defined(_WIN32)||defined(WIN32))
+	constexpr auto _fseeki64=fseeko;//https://stackoverflow.com/a/49819511
+#endif
 namespace DerKern{
 	namespace Inputo{
 		struct Chunk{

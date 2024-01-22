@@ -1,13 +1,13 @@
 cd completed
 g++ standlo.cpp -o standlo -Wno-return-type
-standlo
+./standlo
 
 g++ ascii.cpp -o ascii -Wno-return-type
-ascii
+./ascii
 
 g++ type.cpp -o type -Wno-return-type
-type.exe
+./type
 
 g++ instructions.cpp -o instructions -Wno-return-type
-instructions
+./instructions
 cd ..

@@ -1,18 +1,21 @@
 #pragma once
 #include"../include/DerKern/Type.h"
 #include"Values.cpp"
-#include"Erroring.cpp"
+#include"Compile.cpp"
 namespace DerKern{
-	Type Type::i8=Type("int8",1);Type Type::u8=Type("uint8",1);
-	Type Type::i16=Type("int16",2);Type Type::u16=Type("uint16",2);
-	Type Type::i32=Type("int32",4);Type Type::u32=Type("uint32",4);
-	Type Type::i64=Type("int64",8);Type Type::u64=Type("uint64",8);
-	Type Type::f=Type("float",sizeof(float));Type Type::d=Type("double",sizeof(double));
-	Type Type::str=Type("string",sizeof(int*));Type Type::_type=Type("type",sizeof(Type));
-	Type Type::VOID=Type("void",1);
-	Type Type::const_container=Type("<CONST>",0);Type Type::array_container=Type("<ARRAY>",0);
+	Type Type::i8=Type("int8",1),	Type::u8=Type("uint8",1);
+	Type Type::i16=Type("int16",2),	Type::u16=Type("uint16",2);
+	Type Type::i32=Type("int32",4),	Type::u32=Type("uint32",4);
+	Type Type::i64=Type("int64",8),	Type::u64=Type("uint64",8);
+	Type Type::f=Type("float",sizeof(float)),Type::d=Type("double",sizeof(double));
+	Type Type::str=Type("string",sizeof(int*)),Type::VOID=Type("void",1),Type::BOOL=Type("bool",1),Type::_type=Type("type",sizeof(Type));
+	Type Type::const_container=Type("<CONST>",0),Type::array_container=Type("<ARRAY>",0);
 	namespace __TYPE{INITIALIZER(init){
 		Type::VOID.size=0;
+		Type::u8.typeID=Type::u16.typeID=Type::u32.typeID=Type::u64.typeID=Type::IDs::inte;
+		Type::i8.typeID=Type::i16.typeID=Type::i32.typeID=Type::i64.typeID=Type::IDs::inte;
+		Type::f.typeID=Type::d.typeID=Type::IDs::flot;
+		Type::BOOL.typeID=Type::IDs::inte;
 	}}
 	Ptr1Type*Type::pointer(){
 		if(isFinal){Error("An attempt to have a * pointer with a type that doesn't allow it");return 0;}//decided to write it like having a child

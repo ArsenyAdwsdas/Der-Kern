@@ -50,7 +50,7 @@ namespace DerKern{
 
 		inline MyString(const MyString&w){raw=w.raw;if(raw){ref_count()++;assert(ref_count());LOG_ACTIONS("+%p(%llu)\n",raw,(uint64_t)ref_count());}}inline MyString(const MyString&&w):MyString(w){}
 		inline~MyString(){if(raw){if(ref_count()){ref_count()--;LOG_ACTIONS("-%p(%llu)\n",raw,(uint64_t)ref_count());}else{LOG_ACTIONS("/kill %p(%llu)\n",raw,(uint64_t)ref_count());free(&ref_count());}}}
-		inline MyString&operator=(const MyString&w){if(w.raw==raw)return*this;this->~MyString();raw=0;new(this)MyString(w);return*this;}inline MyString&operator=(const MyString&&w){return*this=w;}
+		inline MyString&operator=(const MyString&w){if(w.raw==raw)return*this;this->~MyString();new(this)MyString(w);return*this;}inline MyString&operator=(const MyString&&w){return*this=w;}
 	};
 	#undef LOG_ACTIONS
 }

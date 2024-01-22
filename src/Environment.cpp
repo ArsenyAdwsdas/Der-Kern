@@ -1,6 +1,6 @@
 #include"../include/DerKern/Environment.h"
 #include"Values.cpp"
-#include"Type.cpp"
+#include"Erroring.cpp"
 namespace DerKern{
 	Environment::Environment(size_t ss){
 		stackSize=ss;stack=(uint8_t*)malloc(ss);
@@ -11,8 +11,5 @@ namespace DerKern{
 	}
 	Environment::~Environment(){
 		free(stack);
-	}
-	int32_t&Environment::pointTo(string name,Type*t,void*loc){
-
 	}
 }
